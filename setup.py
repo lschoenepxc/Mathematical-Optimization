@@ -1,12 +1,24 @@
 from setuptools import setup, find_packages
 
-print("hallo2")
+print("Start Mathematical-Optimization setuptools...")
 setup(
-    name='OptimizationDemoCode',
+    name='Mathematical-Optimization',
     version='0.1',
     packages=find_packages(),
     install_requires=[
-        numpy, cvxopt
+        'numpy', 'cvxopt'
     ],
     test_suite='tests',
 )
+
+# Installation des Pakets:
+# python setup.py install
+
+# Erstellen eines Quellverteilungspakets:
+# python setup.py sdist
+
+# Erstellen eines Binärverteilungspakets:
+# python setup.py bdist
+
+# Installation des Pakets im Entwicklungsmodus:
+# python setup.py develop
