@@ -90,7 +90,7 @@ class LineSearch(object):
         i = 1
         while True:
             phis = phi.evaluate(alpha)
-            # Check strong Armijo condition
+            # Check Armijo condition
             if phis > phi0+c1*alpha*dphi0 or (phis > phis_old and i > 1):
                 # Here, we do no longer keep the Armijo condition. Hence, a good choice is between alpha_old and alpha
                 # note the order of the alphas
