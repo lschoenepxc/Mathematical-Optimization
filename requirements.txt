@@ -2,3 +2,4 @@ numpy
 cvxopt
 multimethod
 pytest
+scipy

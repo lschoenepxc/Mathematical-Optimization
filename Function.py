@@ -8,10 +8,12 @@ from multimethod import multimethod
 class IFunction(object):
     """This interface models Functions from ISet to R^n."""
 
-    def __init__(self, name: str, domain: ISet):
+    def __init__(self, name: str, domain: ISet, output_domain: ISet):
         super().__init__()
         self._name = name
         self._domain = domain
+        self._output_domain = output_domain
+        self._verfiied = False
 
     @abstractmethod
     def evaluate(self, point: np.ndarray) -> np.ndarray:
@@ -28,6 +30,11 @@ class IFunction(object):
     def name(self) -> str:
         """The name of the function, might be used for debugging"""
         return self._name
+    
+    @property
+    def output_domain(self) -> ISet:
+        """The domain of the function, i.e., the set of points at which the function can be evaluated."""
+        return self._output_domain
 
 
     @multimethod
@@ -47,6 +54,12 @@ class IFunction(object):
             domain=self.domain.intersect(other.domain),
             evaluate=lambda v: self.evaluate(v) + other.evaluate(v)
         )
+        
+    def verfify(self):
+        """Verifies that the function is well defined"""
+        if not self._verfiied:
+            assert self._output_domain.shape == self.evaluate(self.domain.point()).shape , "Function is not well defined"
+            self._verfiied = True
 
     def __mul__(self, other: Union[int, float]) -> 'IFunction':
         """Multiplies the function by a scalar"""

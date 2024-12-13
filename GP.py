@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 import math
 from DifferentiableFunction import DifferentiableFunction
 from Set import AffineSpace
@@ -31,7 +32,17 @@ class GP(object):
         """The vector alpha (notation as in Rasmussen&Williams) of this GP"""
         if not hasattr(self, 'alpha'):
             # this is numerically less stable than using the cholesky decomposition
-            self.alpha = np.linalg.solve(self.__K(), self.data_y)
+            # self.alpha = np.linalg.solve(self.__K(), self.data_y)
+            # self.alpha = np.linalg.solve(self.__L().T, np.linalg.solve(self.__L(), self.data_y))
+            ### Comments todo:
+            # Effizienz: Laufzeit, Speicher, O-Notation
+            # wartbarkeit: Lesbarkeit, Verständlichkeit, Kommentare, Tests!!! --> tatsächlich numerisch stabiler?
+            # Lesbarkeit: Variablen, Funktionen, Kommentare
+            # scipy cho_solve --> viiiel zu langsam!! sollte aber nicht so sein: 
+            # https://stackoverflow.com/questions/66382370/performance-gap-between-np-linalg-solve-and-scipy-linalg-cho-solve
+            # self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y)
+            z = np.linalg.solve(self.__L(), self.data_y)
+            self.alpha = np.linalg.solve(self.L.T, z)
         return self.alpha
 
     def __ks(self, x: np.array) -> np.array:
