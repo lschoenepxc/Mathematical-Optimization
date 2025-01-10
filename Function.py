@@ -13,7 +13,7 @@ class IFunction(object):
         self._name = name
         self._domain = domain
         self._output_domain = output_domain
-        self._verfiied = False
+        self._verified = False
 
     @abstractmethod
     def evaluate(self, point: np.ndarray) -> np.ndarray:
@@ -36,7 +36,6 @@ class IFunction(object):
         """The domain of the function, i.e., the set of points at which the function can be evaluated."""
         return self._output_domain
 
-
     @multimethod
     def __add__(self, other: Union[int, float]) -> 'IFunction':
         """Adds the two functions value wise, where the second function is a constant"""
@@ -55,7 +54,7 @@ class IFunction(object):
             evaluate=lambda v: self.evaluate(v) + other.evaluate(v)
         )
         
-    def verfify(self):
+    def verify(self):
         """Verifies that the function is well defined"""
         if not self._verfiied:
             assert self._output_domain.shape == self.evaluate(self.domain.point()).shape , "Function is not well defined"
@@ -177,6 +176,71 @@ class Function(IFunction):
     def ReLU(cls, dimension: int) -> IFunction:
         """Returns a ReLU function"""
         return cls(name="ReLU", domain=AffineSpace(dimension), evaluate=lambda x: np.maximum(0, x))
+    
+    ### Aufgabe 4.2: Implemetiere 10 weitere Funktionen: sin, cos, tan, exp, log, sqrt, sigmoid, heaviside, square, cube
+    @classmethod
+    def sin(cls, dimension: int) -> IFunction:
+        """Returns a sinus function"""
+        return cls(name="sinus", domain=AffineSpace(dimension), evaluate=lambda x: np.sin(x))
+    
+    @classmethod
+    def cos(cls, dimension: int) -> IFunction:
+        """Returns a cosinus function"""
+        return cls(name="cosinus", domain=AffineSpace(dimension), evaluate=lambda x: np.cos(x))
+    
+    @classmethod
+    def tan(cls, dimension: int) -> IFunction:
+        """Returns a tan function"""
+        return cls(name="tan", domain=AffineSpace(dimension), evaluate=lambda x: np.tan(x))
+    
+    @classmethod
+    def exp(cls, dimension: int) -> IFunction:
+        """Returns a exponential function"""
+        return cls(name="exp", domain=AffineSpace(dimension), evaluate=lambda x: np.exp(x))
+    
+    @classmethod
+    def log(cls, dimension: int) -> IFunction:
+        """Returns a logarithm function"""
+        return cls(name="log", domain=AffineSpace(dimension), evaluate=lambda x: np.log(x))
+    
+    @classmethod
+    def sqrt(cls, dimension: int) -> IFunction:
+        """Returns a square root function"""
+        return cls(name="sqrt", domain=AffineSpace(dimension), evaluate=lambda x: np.sqrt(x))
+    
+    @classmethod
+    def sigmoid(cls, dimension: int) -> IFunction:
+        """Returns a sigmoid function"""
+        return cls(name="sigmoid", domain=AffineSpace(dimension), evaluate=lambda x: 1/(1+np.exp(-x)))
+    
+    @classmethod
+    def heaviside(cls, dimension: int) -> IFunction:
+        """Returns a heaviside function"""
+        return cls(name="heaviside", domain=AffineSpace(dimension), evaluate=lambda x: 1*(x>0))
+    
+    @classmethod
+    def square(cls, dimension: int) -> IFunction:
+        """Returns a square function"""
+        return cls(name="square", domain=AffineSpace(dimension), evaluate=lambda x: x**2)
+    
+    @classmethod
+    def cube(cls, dimension: int) -> IFunction:
+        """Returns a cube function"""
+        return cls(name="cube", domain=AffineSpace(dimension), evaluate=lambda x: x**3)
+    
+    ### Ende Aufgabe 4.2
+    
+    ### Aufgabe 4.3: Implementiere f(x) = (sqrt(cube(x)+2*square(x)-x+1)*exp(sin(square(x))))/(log(square(square(x))+2)+arccos(x/2))
+    
+    @classmethod
+    def arccos(cls, dimension: int) -> IFunction:
+        """Returns a arccos function"""
+        return cls(name="arccos", domain=AffineSpace(dimension), evaluate=lambda x: np.arccos(x))
+    
+    @classmethod
+    def own_function(cls, dimension: int) -> IFunction:
+        """Returns a own function"""
+        return cls(name="own_function", domain=AffineSpace(dimension), evaluate=lambda x: (np.sqrt(x**3+2*x**2-x+1)*np.exp(np.sin(x**2)))/(np.log(x**4+2)+np.arccos(x/2)))
 
     @classmethod
     def TwoNormSquared(cls, dimension: int) -> IFunction:

@@ -40,7 +40,7 @@ class GP(object):
             # Lesbarkeit: Variablen, Funktionen, Kommentare
             # scipy cho_solve --> viiiel zu langsam!! sollte aber nicht so sein: 
             # https://stackoverflow.com/questions/66382370/performance-gap-between-np-linalg-solve-and-scipy-linalg-cho-solve
-            # self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y)
+            # self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y, check_finite=False)
             z = np.linalg.solve(self.__L(), self.data_y)
             self.alpha = np.linalg.solve(self.L.T, z)
         return self.alpha
