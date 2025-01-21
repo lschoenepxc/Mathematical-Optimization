@@ -50,7 +50,8 @@ class tests_GP(unittest.TestCase):
 
         data_x = np.array([[1, 2], [3, 4], [5, 6]])
         data_y = np.array([7, 8, 9])
-        gp = GP(data_x=data_x, data_y=data_y)
+        # gp = GP(data_x=data_x, data_y=data_y, kernel=GP.SquaredExponentialCovariance())
+        gp = GP(data_x=data_x, data_y=data_y, kernel=GP.MaternCovariance(nu=1.5))
         mu = gp.PosteriorMean()
         sigma2 = gp.PosteriorVariance()
         sigma = gp.PosteriorStandardDeviation()

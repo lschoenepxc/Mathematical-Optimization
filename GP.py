@@ -3,17 +3,21 @@ import scipy as sp
 import math
 from DifferentiableFunction import DifferentiableFunction
 from Set import AffineSpace
+from typing import Callable
 
 
 class GP(object):
-    def __init__(self, data_x: np.array, data_y: np.array):
+    def __init__(self, data_x: np.array, data_y: np.array, kernel: Callable[[np.ndarray], np.ndarray] = None):
         super().__init__()
         assert data_x.shape[0] == data_y.shape[0], "need as many x-positions as y-positions."
         self.data_x = data_x
         self.data_y = data_y
         self.n = self.data_x.shape[0]
         self.d = self.data_x.shape[1]
-        self.kernel = lambda x1, x2: math.exp(-0.5*np.linalg.norm(x1-x2)**2)
+        # self.kernel = lambda x1, x2: math.exp(-0.5*np.linalg.norm(x1-x2)**2)
+        if kernel is None:
+            kernel = self.SquaredExponentialCovariance()
+        self.kernel = kernel
 
     def __K(self) -> np.array:
         """The covariance matrix of this GP"""
@@ -40,9 +44,9 @@ class GP(object):
             # Lesbarkeit: Variablen, Funktionen, Kommentare
             # scipy cho_solve --> viiiel zu langsam!! sollte aber nicht so sein: 
             # https://stackoverflow.com/questions/66382370/performance-gap-between-np-linalg-solve-and-scipy-linalg-cho-solve
-            # self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y, check_finite=False)
-            z = np.linalg.solve(self.__L(), self.data_y)
-            self.alpha = np.linalg.solve(self.L.T, z)
+            self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y, check_finite=False)
+            # z = np.linalg.solve(self.__L(), self.data_y)
+            # self.alpha = np.linalg.solve(self.L.T, z)
         return self.alpha
 
     def __ks(self, x: np.array) -> np.array:
@@ -53,6 +57,7 @@ class GP(object):
         """The derivative of the vector k_*=k(x_*,X) (notation as in Rasmussen&Williams) given of this GP"""
         return np.array([list(self.kernel(x, self.data_x[i, :])*(self.data_x[i, :]-x)) for i in range(self.n)])
 
+    # calculate posterior mean, variance and standard deviation with cholesky decomposition
     def PosteriorMean(self):
         return DifferentiableFunction(
             name="GP_posterior_mean",
@@ -60,19 +65,32 @@ class GP(object):
             evaluate=lambda x: np.dot(self.__alpha(), self.__ks(x)),
             jacobian=lambda x: np.dot(self.__alpha(), self.__dks(x))
         )
-
+        
+    # Posterior Kovarianz: (x,x') -> k(x,x') - alpha^T * k(x,X) - k(x',X)
     def PosteriorVariance(self):
         return DifferentiableFunction(
             name="GP_posterior_variance",
             domain=AffineSpace(self.d),
-            evaluate=lambda x: np.array([self.kernel(
-                x, x)-np.linalg.norm(np.linalg.solve(self.__L(), self.__ks(x)))**2]),
-            jacobian=lambda x: 0-2 *
-            np.reshape(np.dot(np.linalg.solve(self.__L(), self.__ks(x)),
-                              np.linalg.solve(self.__L(), self.__dks(x))), (1, -1))
+            evaluate=lambda x: np.array([self.kernel(x, x)-np.linalg.norm(np.linalg.solve(self.__L(), self.__ks(x)))**2]),
+            jacobian=lambda x: 0-2 * np.reshape(np.dot(np.linalg.solve(self.__L(), self.__ks(x)), np.linalg.solve(self.__L(), self.__dks(x))), (1, -1))
         )
 
     def PosteriorStandardDeviation(self):
         sqrt = DifferentiableFunction(name="sqrt", domain=AffineSpace(
             1), evaluate=lambda x: np.sqrt(x), jacobian=lambda x: np.reshape(0.5/np.sqrt(x), (1, 1)))
         return DifferentiableFunction.FromComposition(sqrt, self.PosteriorVariance())
+    
+    @staticmethod
+    def SquaredExponentialCovariance():
+        return lambda x1, x2: np.exp(-0.5*np.linalg.norm(x1-x2)**2)
+    
+    @staticmethod
+    def MaternCovariance(nu: float, length_scale: float = 1.0):
+        def matern_kernel(x1, x2):
+            distance = np.linalg.norm(x1 - x2)
+            factor = np.sqrt(2 * nu) * distance / length_scale
+            if factor == 0.0:
+                return 1.0
+            else:
+                return (2 ** (1 - nu) / sp.special.gamma(nu)) * (factor ** nu) * sp.special.kv(nu, factor)
+        return matern_kernel
