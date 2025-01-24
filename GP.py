@@ -16,7 +16,7 @@ class GP(object):
         self.d = self.data_x.shape[1]
         # self.kernel = lambda x1, x2: math.exp(-0.5*np.linalg.norm(x1-x2)**2)
         if kernel is None:
-            kernel = self.SquaredExponentialCovariance()
+            kernel = self.RBF()
         self.kernel = kernel
 
     def __K(self) -> np.array:
@@ -81,16 +81,23 @@ class GP(object):
         return DifferentiableFunction.FromComposition(sqrt, self.PosteriorVariance())
     
     @staticmethod
-    def SquaredExponentialCovariance():
-        return lambda x1, x2: np.exp(-0.5*np.linalg.norm(x1-x2)**2)
-    
-    @staticmethod
-    def MaternCovariance(nu: float, length_scale: float = 1.0):
+    def MaternCovariance(nu: float, length_scale: float = 1.0, sigma: float = 1.0):
         def matern_kernel(x1, x2):
             distance = np.linalg.norm(x1 - x2)
             factor = np.sqrt(2 * nu) * distance / length_scale
             if factor == 0.0:
                 return 1.0
             else:
-                return (2 ** (1 - nu) / sp.special.gamma(nu)) * (factor ** nu) * sp.special.kv(nu, factor)
+                return (2 ** (1 - nu) / math.gamma(nu)) * (factor ** nu) * sp.special.kv(nu, factor)
         return matern_kernel
+    
+    # matern kernel with nu to infinity
+    @staticmethod
+    def RBF(sigma: float = 1.0):
+        func = lambda x1, x2: np.exp(-(1/(2*sigma))*np.linalg.norm(x1-x2)**2)
+        return func
+    
+    def SquaredExponentialCovariance(self, sigma: float=1.0, length_scale: float = 1.0):
+        return self.RBF(sigma=length_scale)
+    
+    # RBF und Matern und squared exponential sind alle gleich?
