@@ -44,8 +44,9 @@ class GP(object):
             # Lesbarkeit: Variablen, Funktionen, Kommentare
             # scipy cho_solve --> viiiel zu langsam!! sollte aber nicht so sein: 
             # https://stackoverflow.com/questions/66382370/performance-gap-between-np-linalg-solve-and-scipy-linalg-cho-solve
-            # self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y, check_finite=False)
-            self.alpha = self._choleskySolve((self.__L()), self.data_y)
+            self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y, check_finite=False)
+            # self.alpha = self._choleskySolve((self.__L()), self.data_y)
+            # wothout cholesky solve
             # z = np.linalg.solve(self.__L(), self.data_y)
             # self.alpha = np.linalg.solve(self.L.T, z)
         return self.alpha
@@ -85,9 +86,8 @@ class GP(object):
             name="GP_posterior_variance",
             domain=AffineSpace(self.d),
             evaluate=lambda x: np.array([self.kernel(x, x)-np.linalg.norm(np.linalg.solve(self.__L(), self.__ks(x)))**2]),
-            # jacobian=lambda x: 0-2 * np.reshape(np.dot(np.linalg.solve(self.__L(), self.__ks(x)), np.linalg.solve(self.__L(), self.__dks(x))), (1, -1))
-            jacobian=lambda x: 0-2 * np.reshape((np.dot(self._choleskySolve((self.__L()), self.__ks(x)), self._choleskySolve((self.__L()), self.__dks(x)))), (1, -1))
-            # jacobian=lambda x: 0-2 * np.reshape((np.dot(sp.linalg.cho_solve((self.__L()), self.__ks(x)), sp.linalg.cho_solve((self.__L()), self.__dks(x)))), (1, -1))
+            # L from cholesky decomposition of K already calculated in __L --> no cholesky decomposition needed here
+            jacobian=lambda x: 0-2 * np.reshape(np.dot(np.linalg.solve(self.__L(), self.__ks(x)), np.linalg.solve(self.__L(), self.__dks(x))), (1, -1))
         )
 
     def PosteriorStandardDeviation(self):
