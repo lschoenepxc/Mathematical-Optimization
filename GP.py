@@ -85,9 +85,11 @@ class GP(object):
         return DifferentiableFunction(
             name="GP_posterior_variance",
             domain=AffineSpace(self.d),
-            evaluate=lambda x: np.array([self.kernel(x, x)-np.linalg.norm(np.linalg.solve(self.__L(), self.__ks(x)))**2]),
+            # evaluate=lambda x: np.array([self.kernel(x, x)-np.linalg.norm(np.linalg.solve(self.__L(), self.__ks(x)))**2]),
+            evaluate=lambda x: np.array([self.kernel(x, x)-np.linalg.norm(sp.linalg.solve_triangular(self.__L(), self.__ks(x), lower=True))**2]),
             # L from cholesky decomposition of K already calculated in __L --> no cholesky decomposition needed here
-            jacobian=lambda x: 0-2 * np.reshape(np.dot(np.linalg.solve(self.__L(), self.__ks(x)), np.linalg.solve(self.__L(), self.__dks(x))), (1, -1))
+            # jacobian=lambda x: 0-2 * np.reshape(np.dot(np.linalg.solve(self.__L(), self.__ks(x)), np.linalg.solve(self.__L(), self.__dks(x))), (1, -1))
+            jacobian=lambda x: 0-2 * np.reshape(np.dot(sp.linalg.solve_triangular(self.__L(), self.__ks(x), lower=True), sp.linalg.solve_triangular(self.__L(), self.__dks(x), lower=True)), (1, -1))
         )
 
     def PosteriorStandardDeviation(self):
@@ -96,14 +98,14 @@ class GP(object):
         return DifferentiableFunction.FromComposition(sqrt, self.PosteriorVariance())
     
     @staticmethod
-    def MaternCovariance(nu: float, length_scale: float = 1.0, sigma: float = 1.0):
+    def MaternCovariance(nu: float=1.0, length_scale: float = 1.0, sigma: float = 1.0):
         def matern_kernel(x1, x2):
             distance = np.linalg.norm(x1 - x2)
             factor = np.sqrt(2 * nu) * distance / length_scale
             if factor == 0.0:
                 return 1.0
             else:
-                return (2 ** (1 - nu) / math.gamma(nu)) * (factor ** nu) * sp.special.kv(nu, factor)
+                return sigma * (2 ** (1 - nu) / math.gamma(nu)) * (factor ** nu) * sp.special.kv(nu, factor)
         return matern_kernel
     
     # matern kernel with nu to infinity
@@ -112,7 +114,8 @@ class GP(object):
         func = lambda x1, x2: np.exp(-(1/(2*sigma))*np.linalg.norm(x1-x2)**2)
         return func
     
-    def SquaredExponentialCovariance(self, sigma: float=1.0, length_scale: float = 1.0):
-        return self.RBF(sigma=length_scale)
+    # @staticmethod
+    # def SquaredExponentialCovariance(self, sigma: float=1.0, length_scale: float = 1.0):
+    #     return self.RBF(sigma=length_scale)
     
     # RBF und Matern und squared exponential sind alle gleich?

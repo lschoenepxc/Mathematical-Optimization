@@ -18,6 +18,7 @@ class BO(object):
         data_x = np.empty((0, d))
         data_y = np.empty((0,))
         gp = GP(data_x=data_x, data_y=data_y)
+        # gp = GP(data_x=data_x, data_y=data_y, kernel=GP.MaternCovariance(nu=1.5, length_scale=1))
         sqp = SQP()
 
         for step in range(iterations):
