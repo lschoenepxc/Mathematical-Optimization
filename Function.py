@@ -134,13 +134,7 @@ class Function(IFunction):
         n = v.shape[0]
         return cls(name="translation", domain=AffineSpace(n), evaluate=lambda x: x+v)
     
-    def __create_matrix_with_ones(rows: int, columns: int, ones_positions: list[tuple[int, int]]):
-        matrix = np.zeros((rows, columns))
-        row_indices, column_indices = zip(*ones_positions)
-        matrix[row_indices, column_indices] = 1
-        return matrix
-    
-    @ classmethod
+    @classmethod
     def Projection(cls, domain: ISet, l: list[int]) -> IFunction:
         return cls(
             name="projection("+str(l)+")",

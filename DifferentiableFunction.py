@@ -229,11 +229,11 @@ class DifferentiableFunction(Function, IDifferentiableFunction):
         )
         # return cls(name="translation", domain=AffineSpace(n), evaluate=lambda x: x+v, jacobian=lambda x: np.eye(n))
 
-    # def __create_matrix_with_ones(rows: int, columns: int, ones_positions: list[tuple[int, int]]):
-    #     matrix = np.zeros((rows, columns))
-    #     row_indices, column_indices = zip(*ones_positions)
-    #     matrix[row_indices, column_indices] = 1
-    #     return matrix
+    def __create_matrix_with_ones(rows: int, columns: int, ones_positions: list[tuple[int, int]]):
+        matrix = np.zeros((rows, columns))
+        row_indices, column_indices = zip(*ones_positions)
+        matrix[row_indices, column_indices] = 1
+        return matrix
 
     @ classmethod
     def Projection(cls, domain: ISet, l: list[int]) -> IDifferentiableFunction:
