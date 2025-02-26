@@ -1,8 +1,8 @@
 import numpy as np
 import math
-from typing import Callable
+from typing import Callable, Optional
 from DifferentiableFunction import IDifferentiableFunction
-from Set import AffineSpace
+from Set import AffineSpace, MultidimensionalInterval
 from GP import GP
 from SQP import SQP
 
@@ -11,12 +11,35 @@ class BO(object):
     def __init__(self):
         super().__init__()
 
-    def Minimize(self, function: IDifferentiableFunction, iterations: int = 50) -> np.array:
+    def Minimize(self, function: IDifferentiableFunction, iterations: int = 50, x: Optional[np.array] = None, y: Optional[np.array] = None) -> np.array:
 
         domain = function.domain
         d = domain._ambient_dimension
-        data_x = np.empty((0, d))
-        data_y = np.empty((0,))
+        # data_x = np.empty((0, d))
+        # data_y = np.empty((0,))
+        # Assert that the domain of the function is an affine space
+        assert isinstance(domain, AffineSpace), "The domain of the function must be an affine space."
+        # data_x must be in range of the domain, when domain is MultidimensionalInterval
+        if isinstance(domain, AffineSpace):
+            assert domain.contains(x), "The data_x must be in the domain of the function."
+        if isinstance(domain, MultidimensionalInterval):
+            assert domain.contains(x), "The data_x must be in the domain of the function."
+
+        # Initialize data_x and data_y with provided data or empty arrays
+        if x is not None and y is not None:
+            # check that x and y is not empty
+            assert x.shape[0] > 0, "The data_x must not be empty."
+            assert y.shape[0] > 0, "The data_y must not be empty."
+            # data_x dimension must be equal to the domain dimension
+            assert x.shape[1] == d, "The data_x must have the same dimension as the domain."
+            # check that the number of rows in x and y is equal
+            assert x.shape[0] == y.shape[0], "The number of rows in data_x and data_y must be equal."
+            data_x = x
+            data_y = y
+        else:
+            data_x = np.empty((0, d))
+            data_y = np.empty((0,))
+        
         gp = GP(data_x=data_x, data_y=data_y)
         # gp = GP(data_x=data_x, data_y=data_y, kernel=GP.MaternCovariance(nu=1.5, length_scale=1))
         sqp = SQP()
