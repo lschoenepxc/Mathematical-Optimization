@@ -268,7 +268,8 @@ class tests_functions(unittest.TestCase):
         f_coded = DifferentiableFunction.own_function(1)
         # check that both functions are equal
         f = f_formula - f_coded
-        for a in [-1.0, -0.5, 0.1, 1.0]:
+        # only defined for x>0 and x<=1
+        for a in [0.1, 0.5, 1.0]:
             self.assertEqual(f.evaluate(np.array([a])), 0)
             self.assertAlmostEqual(f.jacobian(np.array([a])).sum(), 0)
 

@@ -171,60 +171,6 @@ class Function(IFunction):
             return result
         return cls(name=f.name, domain=f.domain, evaluate=modified_evaluate)
     
-    @classmethod
-    def getScalingParamsDim(cls, input_scalar: Union[int, float, np.array], output_scalar: Union[int, float, np.array], input_offset: Union[int, float, np.array], output_offset: Union[int, float, np.array], input_dim: int, output_dim: int) -> tuple:
-        # Convert scalars to arrays if necessary
-        if isinstance(input_scalar, (int, float)):
-            input_scalar = np.array([input_scalar])
-        if isinstance(input_offset, (int, float)):
-            input_offset = np.array([input_offset])
-        if isinstance(output_scalar, (int, float)):
-            output_scalar = np.array([output_scalar])
-        if isinstance(output_offset, (int, float)):
-            output_offset = np.array([output_offset])
-        # print shapes
-        # print("Shapes: ", input_scalar.shape, input_offset.shape, output_scalar.shape, output_offset.shape)
-        # Adjust shapes if necessary
-        if input_scalar.shape == (1,):
-            input_scalar = np.repeat(input_scalar, input_dim)
-        if output_scalar.shape == (1,):
-            output_scalar = np.repeat(output_scalar, output_dim)
-        if input_offset.shape == (1,):
-            input_offset = np.repeat(input_offset, input_dim)
-        if output_offset.shape == (1,):
-            output_offset = np.repeat(output_offset, output_dim)
-            
-        # print("Shapes: ", input_scalar.shape, input_offset.shape, output_scalar.shape, output_offset.shape)
-
-        # Convert to diagonal matrices
-        input_scalar_matrix = np.diag(input_scalar)
-        output_scalar_matrix = np.diag(output_scalar)
-        # print("Shapes: ", input_scalar_matrix.shape, input_offset.shape, output_scalar_matrix.shape, output_offset.shape)
-                    
-        assert input_scalar_matrix.shape == (input_dim, input_dim)
-        assert input_offset.shape == (input_dim,)
-        assert output_scalar_matrix.shape == (output_dim, output_dim)
-        assert output_offset.shape == (output_dim,)
-        
-        return input_scalar_matrix, output_scalar_matrix, input_offset, output_offset, input_scalar, output_scalar
-    
-    @classmethod
-    def getScaledFunction(cls, f: IFunction, input_scalar: Union[int, float, np.array], output_scalar: Union[int, float, np.array], input_offset: Union[int, float, np.array], output_offset: Union[int, float, np.array]) -> IFunction:
-        """
-        Returns a function that scales both input and output and can add offsets to input and output:
-        x -> output_scalar * f(input_scalar * x + input_offset) + output_offset
-        """
-        output_dim = f.evaluate(np.zeros(f.domain._ambient_dimension)).shape[0]
-        input_dim = f.domain._ambient_dimension
-        
-        input_scalar_matrix, output_scalar_matrix, input_offset, output_offset, input_scalar, output_scalar = cls.getScalingParamsDim(input_scalar, output_scalar, input_offset, output_offset, input_dim, output_dim)
-
-        return cls(
-            name=f"{output_scalar} * {f.name}({input_scalar} * x + {input_offset}) + {output_offset}",
-            domain=f.domain,
-            evaluate=lambda x: np.matmul(output_scalar_matrix, f.evaluate(np.matmul(input_scalar_matrix, x) + input_offset)) + output_offset if isinstance(x, np.ndarray) else output_scalar * f.evaluate(input_scalar * x + input_offset) + output_offset
-        )
-        
     ### Aufgabe 4.2: Implemetiere 10 weitere Funktionen: sin, cos, tan, exp, log, sqrt, sigmoid, heaviside, square, cube
     @classmethod
     def sin(cls, dimension: int) -> IFunction:

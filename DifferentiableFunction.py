@@ -5,7 +5,6 @@ from typing import Callable, Union
 from multimethod import multimethod
 from Function import IFunction, Function
 
-
 class IDifferentiableFunction(IFunction):
     """This interface models differentiable Functions from ISet to R^n."""
 
@@ -90,14 +89,8 @@ class IDifferentiableFunction(IFunction):
     
     @multimethod
     def __mul__(self, other: 'IDifferentiableFunction') -> 'IDifferentiableFunction':
+        # only for componentwise evaluating functions
         multiplied_function = Function.__mul__(self, other)
-        output_dim = multiplied_function.evaluate(np.zeros(multiplied_function.domain._ambient_dimension)).shape[0]
-        print(output_dim)
-        self_jacobian_dim = self.jacobian(np.zeros(multiplied_function.domain._ambient_dimension)).shape[0]
-        print(self_jacobian_dim)
-        other_jacobian_dim = other.jacobian(np.zeros(multiplied_function.domain._ambient_dimension)).shape[0]
-        print(other_jacobian_dim)
-        print(output_dim > 1)
         return DifferentiableFunction(
             name=multiplied_function.name,
             domain=multiplied_function.domain,
@@ -314,26 +307,8 @@ class DifferentiableFunction(Function, IDifferentiableFunction):
             return result
         return cls(name=f.name, domain=f.domain, evaluate=modified_evaluate, jacobian=f.jacobian)
     
-        
-    @classmethod
-    def getScaledFunction(cls, f: IDifferentiableFunction, input_scalar: Union[int, float, np.array], output_scalar: Union[int, float, np.array], input_offset: Union[int, float, np.array], output_offset: Union[int, float, np.array]) -> IDifferentiableFunction:
-        """
-        Returns a function that scales both input and output and can add offsets to input and output:
-        x -> output_scalar * f(input_scalar * x + input_offset) + output_offset
-        """
-        output_dim = f.evaluate(np.zeros(f.domain._ambient_dimension)).shape[0]
-        input_dim = f.domain._ambient_dimension
-        
-        input_scalar_matrix, output_scalar_matrix, input_offset, output_offset, input_scalar, output_scalar = cls.getScalingParamsDim(input_scalar, output_scalar, input_offset, output_offset, input_dim, output_dim)
-        scaled_function = Function.getScaledFunction(f, input_scalar, output_scalar, input_offset, output_offset)
-        return cls(
-            name=scaled_function.name,
-            domain=scaled_function.domain,
-            evaluate=scaled_function.evaluate,
-            jacobian=lambda x: np.matmul(output_scalar_matrix, np.matmul(f.jacobian(np.matmul(input_scalar_matrix, x) + input_offset), input_scalar_matrix)) if isinstance(x, np.ndarray) else output_scalar * f.jacobian(input_scalar * x + input_offset) * input_scalar
-        )
-        
-    ### Aufgabe 4.2: Implemetiere 10 weitere Funktionen: sin, cos, tan, exp, log, sqrt, sigmoid, heaviside, square, cube
+
+    ### Aufgabe 4.2: Implemetiere 10 weitere Funktionen: sin, cos, tan, exp, log, sqrt, sigmoid, square, cube, arccos
     @classmethod
     def sin(cls, dimension: int) -> IDifferentiableFunction:
         """Returns a sinus function"""
