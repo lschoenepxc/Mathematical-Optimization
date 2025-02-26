@@ -4,7 +4,6 @@ from multimethod import multimethod
 
 # This interface models sets.
 
-
 class ISet(ABC):
 
     def __init__(self, ambient_dimension: int):
@@ -115,3 +114,17 @@ class MultidimensionalInterval(ISet):
             lower_bounds=np.concatenate((self.lower_bounds, np.array(
                 [-float.inf] * other._ambient_dimension))),
             upper_bounds=np.concatenate((self.upper_bounds, np.array([float.inf] * other._ambient_dimension))))
+    
+class RealNumbers(ISet):
+    def __init__(self):
+        super().__init__(ambient_dimension=1)
+
+    def contains(self, element) -> bool:
+        return isinstance(element, (int, float))
+
+    def point(self) -> np.ndarray:
+        return np.array([np.random.randn()])
+
+    @property
+    def ambient_dimension(self) -> int:
+        return 1
