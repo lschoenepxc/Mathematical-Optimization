@@ -71,6 +71,7 @@ class IDifferentiableFunction(IFunction):
         #     jacobian=lambda v: self.jacobian(v) + other.jacobian(v)
         # )
 
+    @multimethod
     def __mul__(self, other: Union[int, float]) -> 'IDifferentiableFunction':
         """Multiplies the function by a scalar"""
         multiplied_function = Function.__mul__(self, other)
@@ -86,6 +87,27 @@ class IDifferentiableFunction(IFunction):
         #     evaluate=lambda v: other * self.evaluate(v),
         #     jacobian=lambda v: other * self.jacobian(v)
         # )
+    
+    @multimethod
+    def __mul__(self, other: 'IDifferentiableFunction') -> 'IDifferentiableFunction':
+        multiplied_function = Function.__mul__(self, other)
+        output_dim = multiplied_function.evaluate(np.zeros(multiplied_function.domain._ambient_dimension)).shape[0]
+        print(output_dim)
+        self_jacobian_dim = self.jacobian(np.zeros(multiplied_function.domain._ambient_dimension)).shape[0]
+        print(self_jacobian_dim)
+        other_jacobian_dim = other.jacobian(np.zeros(multiplied_function.domain._ambient_dimension)).shape[0]
+        print(other_jacobian_dim)
+        print(output_dim > 1)
+        return DifferentiableFunction(
+            name=multiplied_function.name,
+            domain=multiplied_function.domain,
+            evaluate=multiplied_function.evaluate,
+            jacobian=lambda v: (
+                np.matmul(other.evaluate(v), self.jacobian(v)) + np.matmul(self.evaluate(v), other.jacobian(v))
+                if v.shape[0] > 1 else
+                other.evaluate(v) * self.jacobian(v) + self.evaluate(v) * other.jacobian(v)
+            )
+        )
 
     def __pow__(self, power: int) -> 'IDifferentiableFunction':
         """Take integer exponents of a function"""
@@ -184,6 +206,11 @@ class DifferentiableFunction(Function, IDifferentiableFunction):
     def FromComposition(cls, f: IDifferentiableFunction, g: IDifferentiableFunction) -> IDifferentiableFunction:
         """Constructs f ° g"""
         composed_function = Function.FromComposition(f, g)
+        # print(composed_function.name)
+        # print(f.evaluate(np.zeros(f.domain._ambient_dimension)).shape[0])
+        # print(g.evaluate(np.zeros(g.domain._ambient_dimension)).shape[0])
+        # print(f.jacobian(np.zeros(f.domain._ambient_dimension)).shape[0])
+        # print(g.jacobian(np.zeros(g.domain._ambient_dimension)).shape[0])
         return cls(
             name=composed_function.name,
             domain=composed_function.domain,
@@ -305,3 +332,91 @@ class DifferentiableFunction(Function, IDifferentiableFunction):
             evaluate=scaled_function.evaluate,
             jacobian=lambda x: np.matmul(output_scalar_matrix, np.matmul(f.jacobian(np.matmul(input_scalar_matrix, x) + input_offset), input_scalar_matrix)) if isinstance(x, np.ndarray) else output_scalar * f.jacobian(input_scalar * x + input_offset) * input_scalar
         )
+        
+    ### Aufgabe 4.2: Implemetiere 10 weitere Funktionen: sin, cos, tan, exp, log, sqrt, sigmoid, heaviside, square, cube
+    @classmethod
+    def sin(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a sinus function"""
+        sin_function = Function.sin(dimension)
+        return cls(name=sin_function.name, domain=sin_function.domain, evaluate=sin_function.evaluate, jacobian=lambda x: np.diag(np.cos(x)))
+    
+    @classmethod
+    def cos(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a cosinus function"""
+        cos_function = Function.cos(dimension)
+        return cls(name=cos_function.name, domain=cos_function.domain, evaluate=cos_function.evaluate, jacobian=lambda x: np.diag(-np.sin(x)))
+    
+    @classmethod
+    def tan(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a tan function"""
+        tan_function = Function.tan(dimension)
+        return cls(name=tan_function.name, domain=tan_function.domain, evaluate=tan_function.evaluate, jacobian=lambda x: np.diag(1/np.cos(x)**2))
+    
+    @classmethod
+    def exp(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a exponential function"""
+        exp_function = Function.exp(dimension)
+        return cls(name=exp_function.name, domain=exp_function.domain, evaluate=exp_function.evaluate, jacobian=lambda x: np.diag(np.exp(x)))
+    
+    @classmethod
+    def log(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a logarithm function"""
+        log_function = Function.log(dimension)
+        return cls(name=log_function.name, domain=log_function.domain, evaluate=log_function.evaluate, jacobian=lambda x: np.diag(1/x))
+    
+    @classmethod
+    def sqrt(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a square root function"""
+        sqrt_function = Function.sqrt(dimension)
+        return cls(name=sqrt_function.name, domain=sqrt_function.domain, evaluate=sqrt_function.evaluate, jacobian=lambda x: np.diag(1/(2*np.sqrt(x))))
+    
+    @classmethod
+    def sigmoid(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a sigmoid function"""
+        sigmoid_function = Function.sigmoid(dimension)
+        return cls(name=sigmoid_function.name, domain=sigmoid_function.domain, evaluate=sigmoid_function.evaluate, jacobian=lambda x: np.diag(np.exp(-x)/(1+np.exp(-x))**2))
+    
+    @classmethod
+    def square(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a square function"""
+        square_function = Function.square(dimension)
+        return cls(name=square_function.name, domain=square_function.domain, evaluate=square_function.evaluate, jacobian=lambda x: np.diag(2*x))
+    
+    @classmethod
+    def cube(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a cube function"""
+        cube_function = Function.cube(dimension)
+        return cls(name=cube_function.name, domain=cube_function.domain, evaluate=cube_function.evaluate, jacobian=lambda x: np.diag(3*x**2))
+    
+    @classmethod
+    def arccos(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns a arccos function"""
+        arccos_function = Function.arccos(dimension)
+        return cls(name=arccos_function.name, domain=arccos_function.domain, evaluate=arccos_function.evaluate, jacobian=lambda x: np.diag(-1/np.sqrt(1-x**2)))
+    
+    ### Ende Aufgabe 4.2
+    
+    ### Aufgabe 4.3: Implementiere f(x) = (sqrt(cube(x)+2*square(x)-x+1)*exp(sin(square(x))))/(log(square(square(x))+2)+arccos(x/2))
+    
+    @classmethod
+    def own_function(cls, dimension: int) -> IDifferentiableFunction:
+        """Returns our own function"""
+        sqrt_input = DifferentiableFunction(name="x^3+2*x^2-x+1", domain=AffineSpace(dimension), evaluate=lambda x: x**3+2*x**2-x+1, jacobian=lambda x: 3*x**2+4*x-1)
+        sqrt_func = DifferentiableFunction.sqrt(dimension)
+        sqrt_composed = DifferentiableFunction.FromComposition(sqrt_func, sqrt_input)
+        sin_input = DifferentiableFunction.square(dimension)
+        sin_func = DifferentiableFunction.sin(dimension)
+        sin_composed = DifferentiableFunction.FromComposition(sin_func, sin_input)
+        exp_func = DifferentiableFunction.exp(dimension)
+        exp_composed = DifferentiableFunction.FromComposition(exp_func, sin_composed)
+        zähler = sqrt_composed * exp_composed
+        log_input = DifferentiableFunction(name="x^4+2", domain=AffineSpace(dimension), evaluate=lambda x: x**4+2, jacobian=lambda x: 4*x**3)
+        log_func = DifferentiableFunction.log(dimension)
+        log_composed = DifferentiableFunction.FromComposition(log_func, log_input)
+        arccos_input = DifferentiableFunction(name="0.5*x", domain=AffineSpace(dimension), evaluate=lambda x: x/2, jacobian=lambda x: 1/2)
+        arccos_func = DifferentiableFunction.arccos(dimension)
+        arccos_composed = DifferentiableFunction.FromComposition(arccos_func, arccos_input)
+        nenner = (log_composed + arccos_composed)**(-1)
+        complete = zähler * nenner
+        return complete
+        # return cls(name="own_function", domain=AffineSpace(dimension), evaluate=lambda x: (np.sqrt(x**3+2*x**2-x+1)*np.exp(np.sin(x**2)))/(np.log(x**4+2)+np.arccos(x/2)))

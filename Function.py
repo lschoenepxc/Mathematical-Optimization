@@ -44,13 +44,24 @@ class IFunction(object):
             domain=self.domain.intersect(other.domain),
             evaluate=lambda v: self.evaluate(v) + other.evaluate(v)
         )
-        
+    
+    @multimethod
     def __mul__(self, other: Union[int, float]) -> 'IFunction':
         """Multiplies the function by a scalar"""
         return Function(
             name=str(other) + " * (" + self.name + ")",
             domain=self.domain,
             evaluate=lambda v: other * self.evaluate(v)
+        )
+    
+    @multimethod
+    def __mul__(self, other: 'IFunction') -> 'IFunction':
+        """Multiplies the two functions value wise"""
+        assert self.evaluate(np.zeros(self.domain._ambient_dimension)).shape == other.evaluate(np.zeros(other.domain._ambient_dimension)).shape, "The two functions must have the same output dimension"
+        return Function(
+            name="(" + self.name + ") * (" + other.name + ")",
+            domain=self.domain.intersect(other.domain),
+            evaluate=lambda v: np.multiply(self.evaluate(v), other.evaluate(v))
         )
 
     def __pow__(self, power: int) -> 'IFunction':
@@ -213,3 +224,56 @@ class Function(IFunction):
             domain=f.domain,
             evaluate=lambda x: np.matmul(output_scalar_matrix, f.evaluate(np.matmul(input_scalar_matrix, x) + input_offset)) + output_offset if isinstance(x, np.ndarray) else output_scalar * f.evaluate(input_scalar * x + input_offset) + output_offset
         )
+        
+    ### Aufgabe 4.2: Implemetiere 10 weitere Funktionen: sin, cos, tan, exp, log, sqrt, sigmoid, heaviside, square, cube
+    @classmethod
+    def sin(cls, dimension: int) -> IFunction:
+        """Returns a sinus function"""
+        return cls(name="sinus", domain=AffineSpace(dimension), evaluate=lambda x: np.sin(x))
+    
+    @classmethod
+    def cos(cls, dimension: int) -> IFunction:
+        """Returns a cosinus function"""
+        return cls(name="cosinus", domain=AffineSpace(dimension), evaluate=lambda x: np.cos(x))
+    
+    @classmethod
+    def tan(cls, dimension: int) -> IFunction:
+        """Returns a tan function"""
+        return cls(name="tan", domain=AffineSpace(dimension), evaluate=lambda x: np.tan(x))
+    
+    @classmethod
+    def exp(cls, dimension: int) -> IFunction:
+        """Returns a exponential function"""
+        return cls(name="exp", domain=AffineSpace(dimension), evaluate=lambda x: np.exp(x))
+    
+    @classmethod
+    def log(cls, dimension: int) -> IFunction:
+        """Returns a logarithm function"""
+        return cls(name="log", domain=AffineSpace(dimension), evaluate=lambda x: np.log(x))
+    
+    @classmethod
+    def sqrt(cls, dimension: int) -> IFunction:
+        """Returns a square root function"""
+        return cls(name="sqrt", domain=AffineSpace(dimension), evaluate=lambda x: np.sqrt(x))
+    
+    @classmethod
+    def sigmoid(cls, dimension: int) -> IFunction:
+        """Returns a sigmoid function"""
+        return cls(name="sigmoid", domain=AffineSpace(dimension), evaluate=lambda x: 1/(1+np.exp(-x)))
+    
+    @classmethod
+    def square(cls, dimension: int) -> IFunction:
+        """Returns a square function"""
+        return cls(name="square", domain=AffineSpace(dimension), evaluate=lambda x: x**2)
+    
+    @classmethod
+    def cube(cls, dimension: int) -> IFunction:
+        """Returns a cube function"""
+        return cls(name="cube", domain=AffineSpace(dimension), evaluate=lambda x: x**3)
+    
+    @classmethod
+    def arccos(cls, dimension: int) -> IFunction:
+        """Returns a arccos function"""
+        return cls(name="arccos", domain=AffineSpace(dimension), evaluate=lambda x: np.arccos(x))
+    
+    ### Ende Aufgabe 4.2

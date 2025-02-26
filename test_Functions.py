@@ -254,6 +254,23 @@ class tests_functions(unittest.TestCase):
                     f.evaluate(np.array([a, b])), 0)
                 self.assertAlmostEqual(
                     f.jacobian(np.array([a, b])).sum(), 0)
+                
+    def test_own_function(self):
+
+        R = AffineSpace(1)
+        evaluate = lambda x: (np.sqrt(x**3+2*x**2-x+1)*np.exp(np.sin(x**2)))/(np.log(x**4+2)+np.arccos(x/2))
+        jacobian = lambda x: (2*x * np.sqrt(4 - x**2) * (x**4 + 2) * (np.log(x**4 + 2) + np.arccos(x/2)) * (x**3 + 2*x**2 - x + 1) * np.cos(x**2) 
+                     + np.sqrt(4 - x**2) * (x**4 + 2) * (np.log(x**4 + 2) + np.arccos(x/2)) * (3*x**2 + 4*x - 1)/2 
+                     - (-x**4 + 4*x**3*np.sqrt(4 - x**2) - 2) * (x**3 + 2*x**2 - x + 1)) \
+                    * np.exp(np.sin(x**2)) / (np.sqrt(4 - x**2) * (x**4 + 2) * (np.log(x**4 + 2) + np.arccos(x/2))**2 * np.sqrt(x**3 + 2*x**2 - x + 1))
+        f_formula = DifferentiableFunction(
+            name="own_function_manual", domain=R, evaluate=evaluate, jacobian=jacobian)
+        f_coded = DifferentiableFunction.own_function(1)
+        # check that both functions are equal
+        f = f_formula - f_coded
+        for a in [-1.0, -0.5, 0.1, 1.0]:
+            self.assertEqual(f.evaluate(np.array([a])), 0)
+            self.assertAlmostEqual(f.jacobian(np.array([a])).sum(), 0)
 
 
 if __name__ == '__main__':
