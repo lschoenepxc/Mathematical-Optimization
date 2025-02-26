@@ -286,3 +286,22 @@ class DifferentiableFunction(Function, IDifferentiableFunction):
             print(f"{f.name} - Input: {x}, Output: {result}")
             return result
         return cls(name=f.name, domain=f.domain, evaluate=modified_evaluate, jacobian=f.jacobian)
+    
+        
+    @classmethod
+    def getScaledFunction(cls, f: IDifferentiableFunction, input_scalar: Union[int, float, np.array], output_scalar: Union[int, float, np.array], input_offset: Union[int, float, np.array], output_offset: Union[int, float, np.array]) -> IDifferentiableFunction:
+        """
+        Returns a function that scales both input and output and can add offsets to input and output:
+        x -> output_scalar * f(input_scalar * x + input_offset) + output_offset
+        """
+        output_dim = f.evaluate(np.zeros(f.domain._ambient_dimension)).shape[0]
+        input_dim = f.domain._ambient_dimension
+        
+        input_scalar_matrix, output_scalar_matrix, input_offset, output_offset, input_scalar, output_scalar = cls.getScalingParamsDim(input_scalar, output_scalar, input_offset, output_offset, input_dim, output_dim)
+        scaled_function = Function.getScaledFunction(f, input_scalar, output_scalar, input_offset, output_offset)
+        return cls(
+            name=scaled_function.name,
+            domain=scaled_function.domain,
+            evaluate=scaled_function.evaluate,
+            jacobian=lambda x: np.matmul(output_scalar_matrix, np.matmul(f.jacobian(np.matmul(input_scalar_matrix, x) + input_offset), input_scalar_matrix)) if isinstance(x, np.ndarray) else output_scalar * f.jacobian(input_scalar * x + input_offset) * input_scalar
+        )
