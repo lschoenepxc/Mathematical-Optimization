@@ -18,7 +18,7 @@ class ReLUFeedForwardNN(object):
         self.ReLU = DifferentiableFunction.ReLU(
             dimension=self.hidden_dim)
 
-        # He initialization of the parameters, stored as vectors (will be reshaped to matrices later)
+        # The initialization of the parameters, stored as vectors (will be reshaped to matrices later)
         self.lins = [np.random.normal(0, math.sqrt(2.0/self.dims[i]), self.dims[i+1] * self.dims[i])
                      for i in range(len(self.dims)-1)]
         self.bias = np.random.normal(0.0, 0.1, self.hidden_dim)
