@@ -1,9 +1,10 @@
-from Set import RealNumbers
-from Field import Field, VectorSpace, LinearMap
+from Set import RealNumbers, MultidimensionalInterval
+from Field import RealNumberField, VectorSpace, LinearMap
+import numpy as np
 
 # Beispiel-Feld
 real_numbers = RealNumbers()
-field = Field(real_numbers)
+field = RealNumberField(real_numbers)
 
 # Operationen auf den Elementen des Sets
 a = 3.0

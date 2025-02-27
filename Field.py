@@ -39,7 +39,7 @@ class IField(ABC):
     def one(self):
         pass
     
-class Field(IField):
+class RealNumberField(IField):
     def __init__(self, set: ISet):
         super().__init__(set)
     
@@ -88,7 +88,7 @@ class Field(IField):
 class IVectorSpace(ABC):
     """Interface für einen Vektorraum."""
     
-    def __init__(self, field: Field):
+    def __init__(self, field: IField):
         self._field = field
     
     @abstractmethod
