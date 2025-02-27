@@ -4,7 +4,7 @@ import math
 from DifferentiableFunction import DifferentiableFunction
 from Set import AffineSpace
 from typing import Callable
-
+from functools import lru_cache
 
 class GP(object):
     def __init__(self, data_x: np.array, data_y: np.array, kernel: Callable[[np.ndarray], np.ndarray] = None):
@@ -32,7 +32,19 @@ class GP(object):
             self.L = np.linalg.cholesky(self.__K())
         return self.L
 
-    def __alpha(self) -> np.array:
+    @lru_cache(maxsize=None)
+    def _cached_kernel_impl(self, x1_tuple, x2_tuple):
+        """Diese Funktion arbeitet NUR mit Tupeln. Dadurch ist sie lru_cache-kompatibel."""
+        # Aus den Tupeln wieder ein numpy-Array bauen
+        x1 = np.array(x1_tuple)
+        x2 = np.array(x2_tuple)
+        return self.kernel(x1, x2)
+
+    def cached_kernel(self, x1, x2):
+        """Public-Methode, die x1 und x2 (Arrays) zu Tupeln macht und dann _cached_kernel_impl aufruft."""
+        return self._cached_kernel_impl(tuple(x1), tuple(x2))
+
+    def __alpha(self, use_cho=True) -> np.array:
         """The vector alpha (notation as in Rasmussen&Williams) of this GP"""
         if not hasattr(self, 'alpha'):
             # this is numerically less stable than using the cholesky decomposition
@@ -44,12 +56,22 @@ class GP(object):
             # Lesbarkeit: Variablen, Funktionen, Kommentare
             # scipy cho_solve --> viiiel zu langsam!! sollte aber nicht so sein: 
             # https://stackoverflow.com/questions/66382370/performance-gap-between-np-linalg-solve-and-scipy-linalg-cho-solve
-            self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y, check_finite=False)
+            if use_cho:
+                self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y, check_finite=False)
+            else:
             # self.alpha = self._choleskySolve((self.__L()), self.data_y)
             # wothout cholesky solve
-            # z = np.linalg.solve(self.__L(), self.data_y)
-            # self.alpha = np.linalg.solve(self.L.T, z)
+                z = np.linalg.solve(self.__L(), self.data_y)
+                self.alpha = np.linalg.solve(self.L.T, z)
         return self.alpha
+    
+    def reset_cache(self):
+        """Löscht alle in der Instanz gecachten Daten."""
+        for attr in ['K', 'L', 'alpha']:
+            if hasattr(self, attr):
+                delattr(self, attr)
+        # lru_cache des Kernel-Implementierung leeren
+        self._cached_kernel_impl.cache_clear()
 
     def __ks(self, x: np.array) -> np.array:
         """The vector k_*=k(x_*,X) (notation as in Rasmussen&Williams) given of this GP"""
