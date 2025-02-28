@@ -265,7 +265,7 @@ class tests_functions(unittest.TestCase):
                     * np.exp(np.sin(x**2)) / (np.sqrt(4 - x**2) * (x**4 + 2) * (np.log(x**4 + 2) + np.arccos(x/2))**2 * np.sqrt(x**3 + 2*x**2 - x + 1))
         f_formula = DifferentiableFunction(
             name="own_function_manual", domain=R, evaluate=evaluate, jacobian=jacobian)
-        f_coded = DifferentiableFunction.own_function(1)
+        f_coded = DifferentiableFunction.own_function()
         # check that both functions are equal
         f = f_formula - f_coded
         # only defined for x>0 and x<=1
