@@ -1,5 +1,5 @@
 ﻿from abc import ABC, abstractmethod
-from Set import ISet, AffineSpace
+from Set import ISet, AffineSpace, MultidimensionalInterval
 import numpy as np
 from typing import Callable, Union
 from multimethod import multimethod

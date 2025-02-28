@@ -89,7 +89,7 @@ class IDifferentiableFunction(IFunction):
     
     @multimethod
     def __mul__(self, other: 'IDifferentiableFunction') -> 'IDifferentiableFunction':
-        # only for componentwise evaluating functions
+        # only for componentwise evaluating, one dimensional functions
         
         multiplied_function = Function.__mul__(self, other)
         
@@ -380,8 +380,9 @@ class DifferentiableFunction(Function, IDifferentiableFunction):
     ### Aufgabe 4.3: Implementiere f(x) = (sqrt(cube(x)+2*square(x)-x+1)*exp(sin(square(x))))/(log(square(square(x))+2)+arccos(x/2))
     
     @classmethod
-    def own_function(cls, dimension: int) -> IDifferentiableFunction:
+    def own_function(cls) -> IDifferentiableFunction:
         """Returns our own function"""
+        dimension = 1
         sqrt_input = DifferentiableFunction(name="x^3+2*x^2-x+1", domain=AffineSpace(dimension), evaluate=lambda x: x**3+2*x**2-x+1, jacobian=lambda x: 3*x**2+4*x-1)
         sqrt_func = DifferentiableFunction.sqrt(dimension)
         sqrt_composed = DifferentiableFunction.FromComposition(sqrt_func, sqrt_input)
