@@ -90,16 +90,23 @@ class IDifferentiableFunction(IFunction):
     @multimethod
     def __mul__(self, other: 'IDifferentiableFunction') -> 'IDifferentiableFunction':
         # only for componentwise evaluating functions
+        
         multiplied_function = Function.__mul__(self, other)
+        
+        # Überprüfen, ob eine Jacobian-Matrix die Shape (1,) und die andere die Shape (1,1) hat
+        if (self.jacobian(self.domain.point()).shape == (1,) and other.jacobian(other.domain.point()).shape == (1, 1)) or \
+        (self.jacobian(self.domain.point()).shape == (1, 1) and other.jacobian(other.domain.point()).shape == (1,)) or \
+        (self.jacobian(self.domain.point()).shape == (1,) and other.jacobian(other.domain.point()).shape == (1,)):
+            jacobian=lambda v: np.matmul(self.jacobian(v).reshape(1, 1), other.evaluate(v)) + np.matmul(self.evaluate(v), other.jacobian(v).reshape(1, 1))
+
+        else :
+            jacobian = lambda v: np.matmul(self.jacobian(v), other.evaluate(v)) + np.matmul(self.evaluate(v), other.jacobian(v))
+        
         return DifferentiableFunction(
             name=multiplied_function.name,
             domain=multiplied_function.domain,
             evaluate=multiplied_function.evaluate,
-            jacobian=lambda v: (
-                np.matmul(other.evaluate(v), self.jacobian(v)) + np.matmul(self.evaluate(v), other.jacobian(v))
-                if v.shape[0] > 1 else
-                other.evaluate(v) * self.jacobian(v) + self.evaluate(v) * other.jacobian(v)
-            )
+            jacobian=jacobian
         )
 
     def __pow__(self, power: int) -> 'IDifferentiableFunction':
@@ -193,17 +200,16 @@ class DifferentiableFunction(Function, IDifferentiableFunction):
     #     return self._evaluate(point)
 
     def jacobian(self, point: np.ndarray) -> np.ndarray:
-        return self._jacobian(point)
+        result = self._jacobian(point)
+        if type(result) is np.ndarray:
+            return result
+        else:
+            return np.array([result])
 
     @ classmethod
     def FromComposition(cls, f: IDifferentiableFunction, g: IDifferentiableFunction) -> IDifferentiableFunction:
         """Constructs f ° g"""
         composed_function = Function.FromComposition(f, g)
-        # print(composed_function.name)
-        # print(f.evaluate(np.zeros(f.domain._ambient_dimension)).shape[0])
-        # print(g.evaluate(np.zeros(g.domain._ambient_dimension)).shape[0])
-        # print(f.jacobian(np.zeros(f.domain._ambient_dimension)).shape[0])
-        # print(g.jacobian(np.zeros(g.domain._ambient_dimension)).shape[0])
         return cls(
             name=composed_function.name,
             domain=composed_function.domain,
@@ -393,5 +399,6 @@ class DifferentiableFunction(Function, IDifferentiableFunction):
         arccos_composed = DifferentiableFunction.FromComposition(arccos_func, arccos_input)
         nenner = (log_composed + arccos_composed)**(-1)
         complete = zähler * nenner
+        # print(complete.name)
         return complete
         # return cls(name="own_function", domain=AffineSpace(dimension), evaluate=lambda x: (np.sqrt(x**3+2*x**2-x+1)*np.exp(np.sin(x**2)))/(np.log(x**4+2)+np.arccos(x/2)))

@@ -57,11 +57,24 @@ class IFunction(object):
     @multimethod
     def __mul__(self, other: 'IFunction') -> 'IFunction':
         """Multiplies the two functions value wise"""
-        assert self.evaluate(np.zeros(self.domain._ambient_dimension)).shape == other.evaluate(np.zeros(other.domain._ambient_dimension)).shape, "The two functions must have the same output dimension"
+        # Überprüfen, ob die Eingabedimensionen übereinstimmen
+        assert self.domain._ambient_dimension == other.domain._ambient_dimension, "The input dimensions of the functions do not match"
+        
+        # Überprüfen, ob beide Funktionen die Shape (1,) haben
+        if self.evaluate(self.domain.point()).shape == (1,) and other.evaluate(other.domain.point()).shape == (1,):
+            return Function(
+                name="(" + self.name + ") * (" + other.name + ")",
+                domain=self.domain.intersect(other.domain),
+                evaluate=lambda v: self.evaluate(v) * other.evaluate(v)
+            )
+        
+        # Überprüfen, ob die Spaltenanzahl der ersten Ausgabe mit der Zeilenanzahl der zweiten Ausgabe übereinstimmt
+        assert self.evaluate(self.domain.point()).shape[1] == other.evaluate(self.domain.point()).shape[0], "The output dimensions of the functions do not match"
+        
         return Function(
             name="(" + self.name + ") * (" + other.name + ")",
             domain=self.domain.intersect(other.domain),
-            evaluate=lambda v: np.multiply(self.evaluate(v), other.evaluate(v))
+            evaluate=lambda v: np.matmul(self.evaluate(v), other.evaluate(v))
         )
 
     def __pow__(self, power: int) -> 'IFunction':
