@@ -185,7 +185,6 @@ class tests_DPLL(unittest.TestCase):
         cnf = CNF(clauses)
         dpll = DPLL()
         satisfiable, assignment = dpll.dpll(cnf, {})
-        print(assignment)
         self.assertTrue(satisfiable)
         
         
