@@ -65,7 +65,7 @@ class ScaledDifferentiableFunction(object):
             output_offset = 0
         
         input_scalar_matrix, output_scalar_matrix, input_offset, output_offset, input_scalar, output_scalar = cls.getScalingParamsDim(input_scalar, output_scalar, input_offset, output_offset, input_dim, output_dim)
-
+        
         return DifferentiableFunction(
             name=f"{output_scalar} * {f.name}({input_scalar} * x + {input_offset}) + {output_offset}",
             domain=f.domain,
@@ -74,7 +74,7 @@ class ScaledDifferentiableFunction(object):
         )
     
     @classmethod
-    def getAutoScaledFunction(cls, f: DifferentiableFunction):
+    def getAutoScaledFunction(cls, f: DifferentiableFunction, samples: Optional[int] = 1000, BO_option: Optional[bool] = False):
         """
         Returns the autoscaled function of the given function f, so that the output values are in [0, 1].
         Only implemented for MultidimensionalInterval domains.
@@ -82,15 +82,26 @@ class ScaledDifferentiableFunction(object):
         # assert domain is MultiDimensionalInterval
         domain = f.domain
         assert isinstance(domain, MultidimensionalInterval), "The domain of the function must be a MultidimensionalInterval."
-        print(f.evaluate(f.domain.point()).shape)
+        # assert single value output for possible min max calculation
         assert (f.evaluate(f.domain.point())).shape == (1,), "The function should give a single value output"
-        # get Min and Max of the function via Bayesian Optimization
-        bo = BO()
-        # single value output
-        min_point = round(float(f.evaluate(bo.Minimize(f))[0]),6)
-        max_point = round(float(f.evaluate(bo.Minimize((-1)*f))[0]),6)
-        # print("Min: ", min_point)
-        # print("Max: ", max_point)
+        
+        # BO option
+        BO_option = BO_option
+        if BO_option:
+            # get Min and Max of the function via Bayesian Optimization
+            bo = BO()
+            # single value output
+            min_point = round(float(f.evaluate(bo.Minimize(f))[0]),6)
+            max_point = round(float(f.evaluate(bo.Minimize((-1)*f))[0]),6)
+        else:
+            # get Min and Max of the function via Sampling
+            samples = samples
+            x = np.array([domain.point() for i in range(samples)])
+            y = np.array([f.evaluate(x[i]) for i in range(samples)])
+            min_point = round(float(np.min(y)),6)
+            max_point = round(float(np.max(y)),6)
+            
+        # print("Min: ", min_point, "Max: ", max_point)
         
         # calculate the output scalar and offset so that the output is scaled to [0, 1]
         output_scalar = 1 / (max_point - min_point)

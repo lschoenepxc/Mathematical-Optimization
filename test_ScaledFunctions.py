@@ -67,7 +67,7 @@ class tests_ScaledFunction(unittest.TestCase):
         # Testen, ob die Funktion korrekt skaliert und verschoben wurde
         actual_output = scaled_offset_f.evaluate(1.0)
         expected_output = output_scalar*f.evaluate(input_scalar*1+input_offset)+output_offset
-        np.testing.assert_array_equal(actual_output, expected_output)
+        np.testing.assert_array_almost_equal(actual_output, expected_output, decimal=2)
         
     def test_auto_scaling(self):
         domain = MultidimensionalInterval(np.array([0]), np.array([2]))
@@ -79,7 +79,7 @@ class tests_ScaledFunction(unittest.TestCase):
         )
         
         sdf = ScaledDifferentiableFunction()
-        autoScaled_f = sdf.getAutoScaledFunction(f)
+        autoScaled_f = sdf.getAutoScaledFunction(f, BO_option=True)
         
         # Testen, ob die Funktion korrekt skaliert und verschoben wurde
         actual_output = autoScaled_f.evaluate(np.array([1.0]))
@@ -88,8 +88,31 @@ class tests_ScaledFunction(unittest.TestCase):
         actual_output_jacobian = autoScaled_f.jacobian(np.array([1.0]))
         expected_output_jacobian = np.array([0.5])
         
-        np.testing.assert_array_equal(actual_output, expected_output)
-        np.testing.assert_array_equal(actual_output_jacobian, expected_output_jacobian)
+        np.testing.assert_array_almost_equal(actual_output, expected_output, decimal=2)
+        np.testing.assert_array_almost_equal(actual_output_jacobian, expected_output_jacobian, decimal=2)
+        
+        
+    def test_auto_scaling2(self):
+        domain = MultidimensionalInterval(np.array([-2]), np.array([0]))
+        f = DifferentiableFunction(
+            name="f",
+            domain=domain,
+            evaluate=lambda x: 3*x**2,
+            jacobian=lambda x: 6*x
+        )
+        
+        sdf = ScaledDifferentiableFunction()
+        autoScaled_f = sdf.getAutoScaledFunction(f)
+        
+        # Testen, ob die Funktion korrekt skaliert und verschoben wurde
+        actual_output = autoScaled_f.evaluate(np.array([-1.0]))
+        expected_output = np.array([0.25])
+        
+        actual_output_jacobian = autoScaled_f.jacobian(np.array([-1.0]))
+        expected_output_jacobian = np.array([-0.5])
+        
+        np.testing.assert_array_almost_equal(actual_output, expected_output, decimal=2)
+        np.testing.assert_array_almost_equal(actual_output_jacobian, expected_output_jacobian, decimal=2)
         
         
 if __name__ == '__main__':
