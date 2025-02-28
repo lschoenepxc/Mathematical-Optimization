@@ -7,7 +7,7 @@ class DownhillSimplex(object):
     def __init__(self):
         super().__init__()
 
-    def checkParams(params: dict) -> bool:
+    def checkParams(self, params: dict) -> bool:
         # Check if all necessary parameters are within bounds
         # alpha > 0, gamma > 0, beta in (0,1), delta in (0,1)
         lowerBound = 0.0
@@ -16,39 +16,46 @@ class DownhillSimplex(object):
         return all([lowerBound < params[key] < upperBounds[i] for i, key in enumerate(params.keys())])
         
     # Schleifeninvarianz!!
-    def checkLinearIndependency(points: np.array) -> bool:
+    def checkLinearIndependency(self, points: np.array) -> bool:
         # Check if for all points x_i but x_0: x_i-x_0 linearly independent 
+        
+        # case onedimensional
+        if points.shape[0] == 2:
+            return True
+        
         # (points/x_0).shape[0] == points.shape[1] --> quadratic matrix
         matrix = [points[i] - points[0] for i in range(1, points.shape[0])]
         return np.linalg.det(matrix) != 0
         
-    def sortPoints(x: np.array,y: np.array) -> np.array:
+    def sortPoints(self, x: np.array,y: np.array) -> np.array:
         # Sort points by their function value
         return x[np.argsort(y)]
     
-    def evalMin(x1: np.array, x2: np.array, function: IFunction) -> np.array:
+    def evalMin(self, x1: np.array, x2: np.array, function: IFunction) -> np.array:
         # Set the minimum of two points
         return x1 if function.evaluate(x1) < function.evaluate(x2) else x2
     
-    def getCentroid(x: np.array) -> np.array:
+    def getCentroid(self, x: np.array) -> np.array:
         # Calculate the centroid of all points but the last/worst one
         return np.mean(x[:-1], axis=0)
     
-    def reflect(x_worst: np.array, x_centroid: np.array, alpha: float) -> np.array:
+    def reflect(self, x_worst: np.array, x_centroid: np.array, alpha: float) -> np.array:
         # Reflect the worst point at the centroid by factor alpha
         return x_centroid + alpha * (x_centroid - x_worst)
     
-    def expand(x_reflect: np.array, x_centroid: np.array, gamma: float) -> np.array:
+    def expand(self, x_reflect: np.array, x_centroid: np.array, gamma: float) -> np.array:
         # Expand the reflected point by factor gamma
         return x_reflect + gamma * (x_reflect - x_centroid)
     
-    def contract(x_min: np.array, x_centroid: np.array, beta: float) -> np.array:
+    def contract(self, x_min: np.array, x_centroid: np.array, beta: float) -> np.array:
         return x_min + beta * (x_centroid - x_min)
     
-    def shrink(x: np.array, delta: float) -> np.array:
+    def shrink(self, x: np.array, delta: float) -> np.array:
         # Shrink all points but the best one towards the best point by factor delta
         x_0 = x[0]
-        return [xi+(x_0-xi)*delta for xi in x]
+        result = [xi+(x_0-xi)*delta for xi in x]
+        result[0] = x_0
+        return np.array(result)
     
     def minimizeStep(self, x: np.array, function: IFunction, params: dict) -> np.array:
         # Calculate the next step of the minimization
@@ -85,8 +92,9 @@ class DownhillSimplex(object):
         assert self.checkParams(params), "Assume all parameters are within bounds"
         x = startingpoints
         assert x.shape[0] == (function._domain.ambient_dimension + 1), "Assume number of starting points is equal to the dimension of the domain + 1"
-        y = [function.evaluate(xi) for xi in x]
-        assert y.shape[0] == 1, "Assume function is evaluating into a scalar"
+        y = np.array([function.evaluate(xi) for xi in x])
+        assert y.shape[1] == 1, "Assume function is evaluating into a scalar"
+        y = y.flatten()
         x = self.sortPoints(x, y)
         
         for i in range(iterations):
@@ -94,6 +102,8 @@ class DownhillSimplex(object):
             assert self.checkLinearIndependency(x), "Assume for all points x_i but x_0: x_i-x_0 linearly independent "
             x = self.minimizeStep(x, function, params)
             x = self.sortPoints(x, y)
-            y = [function.evaluate(xi) for xi in x]
-            if np.linalg.norm(x[0] - x[1]) < tol_x and np.linalg.norm(y(x[0]) - y(x[1])) < tol_y:
+            y = np.array([function.evaluate(xi) for xi in x]).flatten()
+            if (np.linalg.norm(x[0] - x[1])) < tol_x and (np.linalg.norm(y[0] - y[1])) < tol_y:
                 break
+            
+        return x[0]
