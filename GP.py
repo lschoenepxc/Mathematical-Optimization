@@ -14,7 +14,6 @@ class GP(object):
         self.data_y = data_y
         self.n = self.data_x.shape[0]
         self.d = self.data_x.shape[1]
-        # self.kernel = lambda x1, x2: math.exp(-0.5*np.linalg.norm(x1-x2)**2)
         if kernel is None:
             kernel = self.RBF()
         self.kernel = kernel
@@ -43,6 +42,14 @@ class GP(object):
     def cached_kernel(self, x1, x2):
         """Public-Methode, die x1 und x2 (Arrays) zu Tupeln macht und dann _cached_kernel_impl aufruft."""
         return self._cached_kernel_impl(tuple(x1), tuple(x2))
+    
+    def reset_cache(self):
+        """Löscht alle in der Instanz gecachten Daten."""
+        for attr in ['K', 'L', 'alpha']:
+            if hasattr(self, attr):
+                delattr(self, attr)
+        # lru_cache des Kernel-Implementierung leeren
+        self._cached_kernel_impl.cache_clear()
 
     def __alpha(self, use_cho=True) -> np.array:
         """The vector alpha (notation as in Rasmussen&Williams) of this GP"""
@@ -59,19 +66,10 @@ class GP(object):
             if use_cho:
                 self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y, check_finite=False)
             else:
-            # self.alpha = self._choleskySolve((self.__L()), self.data_y)
-            # wothout cholesky solve
+            # without cholesky solve
                 z = np.linalg.solve(self.__L(), self.data_y)
                 self.alpha = np.linalg.solve(self.L.T, z)
         return self.alpha
-    
-    def reset_cache(self):
-        """Löscht alle in der Instanz gecachten Daten."""
-        for attr in ['K', 'L', 'alpha']:
-            if hasattr(self, attr):
-                delattr(self, attr)
-        # lru_cache des Kernel-Implementierung leeren
-        self._cached_kernel_impl.cache_clear()
 
     def __ks(self, x: np.array) -> np.array:
         """The vector k_*=k(x_*,X) (notation as in Rasmussen&Williams) given of this GP"""
@@ -80,18 +78,6 @@ class GP(object):
     def __dks(self, x: np.array) -> np.array:
         """The derivative of the vector k_*=k(x_*,X) (notation as in Rasmussen&Williams) given of this GP"""
         return np.array([list(self.kernel(x, self.data_x[i, :])*(self.data_x[i, :]-x)) for i in range(self.n)])
-    
-    # needed for scipy from version 1.15.1 onward (not needed for 1.14)
-    def _choleskySolve(self, A:np.ndarray, b:np.ndarray) -> np.ndarray:
-
-        # the assertion could be useful, BUT this is a private function, called three times by me
-        #assert np.allclose(A, np.tril(A)), "choleskySolve expects a lower triangular Matrix as A" 
-        try:
-            result = sp.linalg.cho_solve((A, True), b, check_finite=False) 
-        except Exception as ex:
-            # scipy throws an error in trivial test cases, in this case numpy yields the 'correct' result
-            result = np.linalg.solve(A, np.linalg.solve(np.transpose(A), b))
-        return result
 
     # calculate posterior mean, variance and standard deviation with cholesky decomposition
     def PosteriorMean(self):
