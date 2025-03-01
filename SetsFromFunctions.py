@@ -33,6 +33,19 @@ class BoundedSet(MultidimensionalInterval):
             return x
         else:
             return None
+    
+    def project(self, point: np.array) -> np.array:
+        # Project the point onto the bounds
+        projected_point = np.minimum(np.maximum(point, self.lower_bounds), self.upper_bounds)
+        
+        # If there are inequality constraints, project onto them as well
+        if self._InequalityConstraints is not None:
+            while np.any(self._InequalityConstraints.evaluate(projected_point) > 0):
+                gradient = self._InequalityConstraints.jacobian(projected_point)
+                projected_point -= gradient * self._InequalityConstraints.evaluate(projected_point)
+                projected_point = np.minimum(np.maximum(projected_point, self.lower_bounds), self.upper_bounds)
+        
+        return projected_point
 
     @ property
     def InequalityConstraints(self) -> IDifferentiableFunction:

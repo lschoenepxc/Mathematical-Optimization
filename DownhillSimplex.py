@@ -1,6 +1,8 @@
 import numpy as np
 from Function import IFunction, Function
 from Set import AffineSpace, MultidimensionalInterval
+from SetsFromFunctions import BoundedSet
+from typing import Optional
 
 class DownhillSimplex(object):
 
@@ -55,7 +57,7 @@ class DownhillSimplex(object):
         result[0] = x_0
         return np.array(result)
     
-    def minimizeStep(self, x: np.array, function: IFunction, params: dict) -> np.array:
+    def minimizeStep(self, x: np.array, function: IFunction, params: dict, bounded_set: BoundedSet) -> np.array:
         # Calculate the next step of the minimization
         
         # 1. Calculate the centroid of all points but the last/worst one
@@ -65,9 +67,15 @@ class DownhillSimplex(object):
         x_worst = x[-1]
         x_reflect = self.reflect(x_worst, x_centroid, params['alpha'])
         
+        # Project the reflected point onto the bounded set
+        if bounded_set is not None:
+            x_reflect = bounded_set.project(x_reflect)
+        
         # 3. If the reflected point is better than the best point, expand the reflected point
         if function.evaluate(x_reflect) < function.evaluate(x[0]):
             x_expand = self.expand(x_reflect, x_centroid, params['gamma'])
+            if bounded_set is not None:
+                x_expand = bounded_set.project(x_expand)
             x_expand_reflect_Min = self.evalMin(x_expand, x_reflect, function)
             return np.concatenate((x[:-1], [x_expand_reflect_Min]))
         
@@ -78,15 +86,23 @@ class DownhillSimplex(object):
         # 5. Contract the minimum of the reflected point and the worst point
         x_worst_reflect_Min = self.evalMin(x_worst, x_reflect, function)
         x_contract = self.contract(x_worst_reflect_Min, x_centroid, params['beta'])
+        if bounded_set is not None:
+            x_contract = bounded_set.project(x_contract)
         
         # 6. If the contracted point is better than the worst point, return the contracted point
         if function.evaluate(x_contract) < function.evaluate(x[-1]):
             return np.concatenate((x[:-1], [x_contract]))
         
         # 7. Shrink
-        return self.shrink(x, params['delta'])
+        x_shrink = self.shrink(x, params['delta'])
     
-    def minimize(self, function: IFunction, startingpoints: np.array, params: dict={'alpha':1.0, 'gamma':2.0, 'beta': 0.5, 'delta': 0.5}, iterations: int = 100, tol_x=1e-5, tol_y=1e-5) -> np.array:
+        # Project all points onto the bounded set
+        if bounded_set is not None:
+            x_shrink = np.array([bounded_set.project(xi) for xi in x_shrink])
+        
+        return x_shrink
+    
+    def minimize(self, function: IFunction, startingpoints: np.array, bounded_set: Optional[BoundedSet], params: dict={'alpha':1.0, 'gamma':2.0, 'beta': 0.5, 'delta': 0.5}, iterations: int = 100, tol_x=1e-5, tol_y=1e-5) -> np.array:
         assert self.checkParams(params), "Assume all parameters are within bounds"
         x = startingpoints
         assert x.shape[0] == (function._domain.ambient_dimension + 1), "Assume number of starting points is equal to the dimension of the domain + 1"
@@ -98,7 +114,7 @@ class DownhillSimplex(object):
         for i in range(iterations):
             # Schleifeninvarianz
             assert self.checkLinearIndependency(x), "Assume for all points x_i but x_0: x_i-x_0 linearly independent "
-            x = self.minimizeStep(x, function, params)
+            x = self.minimizeStep(x, function, params, bounded_set)
             x = self.sortPoints(x, y)
             y = np.array([function.evaluate(xi) for xi in x]).flatten()
             if (np.linalg.norm(x[0] - x[1])) < tol_x and (np.linalg.norm(y[0] - y[1])) < tol_y:
