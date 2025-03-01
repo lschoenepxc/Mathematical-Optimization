@@ -18,11 +18,9 @@ class DownhillSimplex(object):
     # Schleifeninvarianz!!
     def checkLinearIndependency(self, points: np.array) -> bool:
         # Check if for all points x_i but x_0: x_i-x_0 linearly independent 
-        
         # case onedimensional
         if points.shape[0] == 2:
             return True
-        
         # (points/x_0).shape[0] == points.shape[1] --> quadratic matrix
         matrix = [points[i] - points[0] for i in range(1, points.shape[0])]
         return np.linalg.det(matrix) != 0

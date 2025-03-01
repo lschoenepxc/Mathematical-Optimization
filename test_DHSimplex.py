@@ -14,7 +14,6 @@ class tests_DHSimplex(unittest.TestCase):
         startingpoints = np.array([[10.0], [3.0]])
         simplex = DownhillSimplex()
         params = {'alpha': 1.0, 'gamma': 2.0, 'beta': 0.5, 'delta': 0.5}
-        #self, function: IFunction, startingpoints: np.array, params: dict={'alpha':1.0, 'gamma':2.0, 'beta': 0.5, 'delta': 0.5}, iterations: int = 100, tol_x=1e-5, tol_y=1e-5
         result = simplex.minimize(function, startingpoints, params, iterations=100, tol_x=1e-5, tol_y=1e-5)
         
         # Überprüfen, ob das Ergebnis nahe dem globalen Minimum [0, 0] liegt

@@ -18,7 +18,7 @@ class tests_NN(unittest.TestCase):
         params = nn.params
         # params = gd.Minimize(function=loss, startingpoint=params,
         #                      iterations=1000, learningrate=1e-2)
-        # übergebe nn.ToLoss und berechne für jedes Batch neu
+        
         params = gd.StochasticMinimize(toLoss=nn.ToLoss, data_x=data_x, data_y=data_y, startingpoint=params,
                              iterations=1000, learningrate=1e-2, batch_size=4)
         nn.params = params

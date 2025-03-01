@@ -15,8 +15,6 @@ class BO(object):
 
         domain = function.domain
         d = domain._ambient_dimension
-        # data_x = np.empty((0, d))
-        # data_y = np.empty((0,))
 
         # Initialize data_x and data_y with provided data or empty arrays
         if x is not None and y is not None:
