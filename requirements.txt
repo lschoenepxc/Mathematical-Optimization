@@ -1,5 +1,6 @@
-numpy==2.2.2
+numpy==2.2.0
 cvxopt
 multimethod==1.12
 pytest
 scipy==1.14.1
+python-sat
