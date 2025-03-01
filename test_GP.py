@@ -6,52 +6,12 @@ from GP import GP
 
 class tests_GP(unittest.TestCase):
 
-    def test_GP(self):
-
-        # # Maple code to reproduce this test case
-        # restart;
-        # with(LinearAlgebra);
-        # k:=(x1,x2,y1,y2)->exp(-1/2*((x1-y1)^2+(x2-y2)^2));
-        # X:=[[1,2],[3,4],[5,6]];
-        # Y:=Vector([7,8,9]);
-        # K:=evalf(Matrix(nops(X),nops(X),(i,j)->k(X[i][1],X[i][2],X[j][1],X[j][2])));
-        # Ks:=(xs1,xs2)->Vector(nops(X),i->k(X[i][1],X[i][2],xs1,xs2));
-        # alpha:=Transpose(Y).K^(-1);
-        # pred:=(xs1,xs2)->alpha.Ks(xs1,xs2);
-        # evalf(pred(0,0));
-        # evalf(pred(2,1));
-        # evalf(pred(4,3));
-        # evalf(pred(6,5));
-        # dpred:=(_xs1,_xs2)->subs([xs1=_xs1,xs2=_xs2],<diff(pred(xs1,xs2),xs1),diff(pred(xs1,xs2),xs2)>);
-        # evalf(dpred(0,0));
-        # evalf(dpred(2,1));
-        # evalf(dpred(4,3));
-        # evalf(dpred(6,5));
-        # var:=(xs1,xs2)->k(xs1,xs2,xs1,xs2)-Transpose(Ks(xs1,xs2)).K^(-1).Ks(xs1,xs2);
-        # evalf(var(0,0));
-        # evalf(var(2,1));
-        # evalf(var(4,3));
-        # evalf(var(6,5));
-        # dvar:=(_xs1,_xs2)->subs([xs1=_xs1,xs2=_xs2],<diff(var(xs1,xs2),xs1),diff(var(xs1,xs2),xs2)>);
-        # evalf(dvar(0,0));
-        # evalf(dvar(2,1));
-        # evalf(dvar(4,3));
-        # evalf(dvar(6,5));
-        # sigma:=(xs1,xs2)->sqrt(var(xs1,xs2));
-        # evalf(sigma(0,0));
-        # evalf(sigma(2,1));
-        # evalf(sigma(4,3));
-        # evalf(sigma(6,5));
-        # dsigma:=(_xs1,_xs2)->subs([xs1=_xs1,xs2=_xs2],<diff(sigma(xs1,xs2),xs1),diff(sigma(xs1,xs2),xs2)>);
-        # evalf(dsigma(0,0));
-        # evalf(dsigma(2,1));
-        # evalf(dsigma(4,3));
-        # evalf(dsigma(6,5));
+    def test_GP_RBF(self):
 
         data_x = np.array([[1, 2], [3, 4], [5, 6]])
         data_y = np.array([7, 8, 9])
         gp = GP(data_x=data_x, data_y=data_y, kernel=GP.RBF())
-        # gp = GP(data_x=data_x, data_y=data_y, kernel=GP.MaternCovariance())
+        # == GP(data_x=data_x, data_y=data_y), because RBF is the default kernel
         mu = gp.PosteriorMean()
         sigma2 = gp.PosteriorVariance()
         sigma = gp.PosteriorStandardDeviation()
@@ -124,12 +84,11 @@ class tests_GP(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(sigma.jacobian(np.array([6, 5])) -
                                               np.array([0.145541607522181, -0.145541607522212])), 0, 3)
 
-    def test_GP_trivial(self):
+    def test_GP_trivial_RBF(self):
 
         data_x = np.empty((0, 0))
         data_y = np.empty((0,))
         gp = GP(data_x=data_x, data_y=data_y)
-        # gp = GP(data_x=data_x, data_y=data_y, kernel=GP.MaternCovariance())
         mu = gp.PosteriorMean()
         sigma2 = gp.PosteriorVariance()
         sigma = gp.PosteriorStandardDeviation()
@@ -141,7 +100,7 @@ class tests_GP(unittest.TestCase):
         self.assertAlmostEqual(sigma.evaluate(
             np.array([])).item(), 1)
 
-    def test_GP_trivial2(self):
+    def test_GP_trivial2_RBF(self):
 
         data_x = np.empty((0, 3))
         data_y = np.empty((0,))
@@ -157,7 +116,72 @@ class tests_GP(unittest.TestCase):
         self.assertAlmostEqual(sigma.evaluate(
             np.array([])).item(), 1)
         
-    # TODO: Test for other kernels, first test not suitable for MaternCovariance
+        
+    def test_GP_trivial_Matern(self):
+
+        data_x = np.empty((0, 0))
+        data_y = np.empty((0,))
+        gp = GP(data_x=data_x, data_y=data_y, kernel=GP.MaternCovariance())
+        mu = gp.PosteriorMean()
+        sigma2 = gp.PosteriorVariance()
+        sigma = gp.PosteriorStandardDeviation()
+
+        self.assertAlmostEqual(mu.evaluate(
+            np.array([])).item(), 0)
+        self.assertAlmostEqual(sigma2.evaluate(
+            np.array([])).item(), 1)
+        self.assertAlmostEqual(sigma.evaluate(
+            np.array([])).item(), 1)
+
+    def test_GP_trivial2_Matern(self):
+
+        data_x = np.empty((0, 3))
+        data_y = np.empty((0,))
+        gp = GP(data_x=data_x, data_y=data_y, kernel=GP.MaternCovariance())
+        mu = gp.PosteriorMean()
+        sigma2 = gp.PosteriorVariance()
+        sigma = gp.PosteriorStandardDeviation()
+
+        self.assertAlmostEqual(mu.evaluate(
+            np.array([])).item(), 0)
+        self.assertAlmostEqual(sigma2.evaluate(
+            np.array([])).item(), 1)
+        self.assertAlmostEqual(sigma.evaluate(
+            np.array([])).item(), 1)
+        
+    def test_GP_trivial_Linear(self):
+        # Leere Daten
+        data_x = np.empty((0, 0))
+        data_y = np.empty((0,))
+        gp = GP(data_x=data_x, data_y=data_y, kernel=GP.Linear())
+        mu = gp.PosteriorMean()
+        sigma2 = gp.PosteriorVariance()
+        sigma = gp.PosteriorStandardDeviation()
+
+        # Überprüfen Sie, ob der Mittelwert 0 ist
+        self.assertAlmostEqual(mu.evaluate(np.array([])).item(), 0)
+        # Überprüfen Sie, ob die Varianz 0 ist (da der lineare Kernel keine Varianz hinzufügt)
+        self.assertAlmostEqual(sigma2.evaluate(np.array([])).item(), 0)
+        # Überprüfen Sie, ob die Standardabweichung 0 ist
+        self.assertAlmostEqual(sigma.evaluate(np.array([])).item(), 0)
+
+    def test_GP_trivial2_Linear(self):
+        # Leere Daten mit 3-dimensionalem Eingaberaum
+        data_x = np.empty((0, 3))
+        data_y = np.empty((0,))
+        gp = GP(data_x=data_x, data_y=data_y, kernel=GP.Linear())
+        mu = gp.PosteriorMean()
+        sigma2 = gp.PosteriorVariance()
+        sigma = gp.PosteriorStandardDeviation()
+
+        # Überprüfen Sie, ob der Mittelwert 0 ist
+        self.assertAlmostEqual(mu.evaluate(np.array([])).item(), 0)
+        # Überprüfen Sie, ob die Varianz 0 ist (da der lineare Kernel keine Varianz hinzufügt)
+        self.assertAlmostEqual(sigma2.evaluate(np.array([])).item(), 0)
+        # Überprüfen Sie, ob die Standardabweichung 0 ist
+        self.assertAlmostEqual(sigma.evaluate(np.array([])).item(), 0)
+
+        
 
 
 if __name__ == '__main__':

@@ -120,24 +120,23 @@ class GP(object):
         return DifferentiableFunction.FromComposition(sqrt, self.PosteriorVariance())
     
     @staticmethod
-    def MaternCovariance(nu: float=1.0, length_scale: float = 1.0, sigma: float = 1.0):
+    def MaternCovariance(nu: float=2.5, length_scale: float = 1.0, sigma: float = 1.0):
         def matern_kernel(x1, x2):
             distance = np.linalg.norm(x1 - x2)
             factor = np.sqrt(2 * nu) * distance / length_scale
             if factor == 0.0:
                 return 1.0
             else:
-                return sigma * (2 ** (1 - nu) / math.gamma(nu)) * (factor ** nu) * sp.special.kv(nu, factor)
+                return sigma**2 * (2 ** (1 - nu) / math.gamma(nu)) * (factor ** nu) * sp.special.kv(nu, factor)
         return matern_kernel
     
-    # matern kernel with nu to infinity
     @staticmethod
-    def RBF(sigma: float = 1.0):
-        func = lambda x1, x2: np.exp(-(1/(2*sigma))*np.linalg.norm(x1-x2)**2)
-        return func
+    def RBF(sigma: float = 1.0, length_scale: float = 1.0):
+        # Standard with sigma = 1 and length_scale = 1 --> Gaussian Kernel
+        rbf_kernel = lambda x, xp: sigma**2 * np.exp(-np.linalg.norm(x - xp)**2 / (2 * length_scale**2))
+        return rbf_kernel
     
-    # @staticmethod
-    # def SquaredExponentialCovariance(self, sigma: float=1.0, length_scale: float = 1.0):
-    #     return self.RBF(sigma=length_scale)
-    
-    # RBF und Matern und squared exponential sind alle gleich?
+    @staticmethod
+    def Linear(sigma: float = 1.0):
+        linear_kernel = lambda x, xp: sigma**2 * np.dot(x, xp)
+        return linear_kernel
