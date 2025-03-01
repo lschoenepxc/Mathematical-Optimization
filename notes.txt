@@ -118,3 +118,68 @@ class IFunction(object):
         if not self._verfiied:
             assert self._output_domain.shape == self.evaluate(self.domain.point()).shape , "Function is not well defined"
             self._verfiied = True
+
+
+Umgang mit hochdimensionalen zulässigen Mengen
+Hochdimensionale zulässige Mengen stellen besondere Herausforderungen für Optimierungsverfahren dar, insbesondere hinsichtlich der Effizienz und der Konvergenz. Hier sind einige Überlegungen und Empfehlungen, welche Optimierungsverfahren sich für hochdimensionale zulässige Mengen eignen und welche nicht:
+
+Geeignete Optimierungsverfahren
+BFGS (Broyden-Fletcher-Goldfarb-Shanno)
+
+Vorteile: BFGS ist ein Quasi-Newton-Verfahren, das die Hesse-Matrix approximiert und somit effizienter als Newton-Verfahren ist. Es eignet sich gut für hochdimensionale Probleme, da es die zweite Ableitung nicht explizit berechnet.
+Nachteile: BFGS kann bei sehr hohen Dimensionen speicherintensiv werden, da es eine ( n \times n ) Hesse-Matrix speichert.
+Bayesian Optimization
+
+Vorteile: Bayesian Optimization ist besonders nützlich für teure Zielfunktionen, da es die Anzahl der Funktionsauswertungen minimiert. Es verwendet probabilistische Modelle (z.B. Gaussian Processes), um die Zielfunktion zu approximieren.
+Nachteile: Die Skalierbarkeit von Bayesian Optimization ist begrenzt, da die Komplexität der Gaussian Processes mit der Anzahl der Dimensionen und Datenpunkten zunimmt.
+Stochastic Gradient Descent (SGD)
+
+Vorteile: SGD ist sehr effizient für hochdimensionale Probleme, insbesondere bei großen Datensätzen. Es verwendet stochastische Approximationen des Gradienten, was die Berechnungskosten pro Iteration reduziert.
+Nachteile: SGD kann bei schlecht konditionierten Problemen langsam konvergieren und erfordert sorgfältige Wahl der Hyperparameter (z.B. Lernrate).
+Sequential Quadratic Programming (SQP)
+
+Vorteile: SQP ist ein leistungsfähiges Verfahren für nichtlineare Optimierungsprobleme mit Nebenbedingungen. Es löst eine Reihe von quadratischen Unterproblemen, die einfacher zu handhaben sind.
+Nachteile: SQP kann bei sehr hohen Dimensionen speicherintensiv und rechenaufwendig sein.
+Weniger geeignete Optimierungsverfahren
+Downhill Simplex (Nelder-Mead)
+
+Nachteile: Der Downhill Simplex Algorithmus skaliert schlecht mit der Dimension des Problems, da die Anzahl der Simplex-Ecken mit der Dimension zunimmt. Dies führt zu einer exponentiellen Zunahme der Berechnungskosten und kann die Konvergenz verlangsamen.
+Line Search
+
+Nachteile: Line Search Verfahren sind in der Regel für unidimensionale Optimierungsprobleme konzipiert und erfordern eine geeignete Suchrichtung. In hochdimensionalen Räumen kann die Wahl der Suchrichtung und die Durchführung der Line Search ineffizient sein.
+Empfehlungen
+Für hochdimensionale zulässige Mengen empfehlen sich insbesondere Verfahren wie BFGS, Bayesian Optimization und Stochastic Gradient Descent. Diese Verfahren sind effizienter und skalierbarer als andere Methoden. Es ist jedoch wichtig, die spezifischen Anforderungen und Eigenschaften des Optimierungsproblems zu berücksichtigen, um das am besten geeignete Verfahren auszuwählen.
+
+Beispiel für die Verwendung von BFGS mit hochdimensionalen zulässigen Mengen
+Hier ist ein Beispiel, wie Sie BFGS für ein hochdimensionales Optimierungsproblem mit einem BoundedSet verwenden können:
+
+import numpy as np
+from Set import AffineSpace
+from DifferentiableFunction import DifferentiableFunction
+from BFGS import BFGS
+from SetsFromFunctions import BoundedSet
+
+def test_bfgs_high_dimensional():
+    dimension = 100  # Hochdimensionale Menge
+    R = AffineSpace(dimension)
+    f = DifferentiableFunction(
+        name="x->sum(x^2)", domain=R,
+        evaluate=lambda x: np.array([np.sum(x**2)]),
+        jacobian=lambda x: 2 * x.reshape(1, -1))
+    
+    lower_bounds = np.full(dimension, -10)
+    upper_bounds = np.full(dimension, 10)
+    bounded_set = BoundedSet(lower_bounds=lower_bounds, upper_bounds=upper_bounds)
+    
+    bfgs = BFGS()
+    starting_point = np.random.uniform(-10, 10, dimension)
+    result = bfgs.Minimize(f, startingpoint=starting_point)
+    
+    print("Optimales Ergebnis:", result)
+
+test_bfgs_high_dimensional()
+
+
+In diesem Beispiel wird BFGS verwendet, um eine hochdimensionale quadratische Funktion zu minimieren, wobei die zulässige Menge durch BoundedSet definiert ist.
+
+linesearch
