@@ -4,7 +4,6 @@ import math
 from DifferentiableFunction import DifferentiableFunction
 from Set import AffineSpace
 from typing import Callable
-from functools import lru_cache
 
 class GP(object):
     def __init__(self, data_x: np.array, data_y: np.array, kernel: Callable[[np.ndarray], np.ndarray] = None):
@@ -38,18 +37,6 @@ class GP(object):
         x1 = np.array(x1_tuple)
         x2 = np.array(x2_tuple)
         return self.kernel(x1, x2)
-
-    def cached_kernel(self, x1, x2):
-        """Public-Methode, die x1 und x2 (Arrays) zu Tupeln macht und dann _cached_kernel_impl aufruft."""
-        return self._cached_kernel_impl(tuple(x1), tuple(x2))
-    
-    def reset_cache(self):
-        """Löscht alle in der Instanz gecachten Daten."""
-        for attr in ['K', 'L', 'alpha']:
-            if hasattr(self, attr):
-                delattr(self, attr)
-        # lru_cache des Kernel-Implementierung leeren
-        self._cached_kernel_impl.cache_clear()
 
     def __alpha(self, use_cho=True) -> np.array:
         """The vector alpha (notation as in Rasmussen&Williams) of this GP"""
