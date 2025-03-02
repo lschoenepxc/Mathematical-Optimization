@@ -53,46 +53,36 @@ siehe
 
 ## Aufgabe 7: Hochdimensionale Daten in den Optimierungsalgorithmen
 
-#### Geeignete Optimierungsverfahren
-
 BFGS (Broyden-Fletcher-Goldfarb-Shanno)
 
-- Vorteile: BFGS ist ein Quasi-Newton-Verfahren, das die Hesse-Matrix approximiert und somit effizienter als Newton-Verfahren ist. Es eignet sich gut für hochdimensionale Probleme, da es die zweite Ableitung nicht explizit berechnet.
+- Vorteile: eignet sich (gut) für hochdimensionale Probleme, da zweite Ableitung nicht explizit berechnet wird.
 
-- Nachteile: BFGS kann bei sehr hohen Dimensionen speicherintensiv werden, da es eine ( n \times n ) Hesse-Matrix speichert.
+- Nachteile: kann speicherintensiv werden, da es eine *(n x n)* Hesse-Matrix speichert.
 
 Bayesian Optimization
 
-- Vorteile: Bayesian Optimization ist besonders nützlich für teure Zielfunktionen, da es die Anzahl der Funktionsauswertungen minimiert. Es verwendet probabilistische Modelle (hier: Gaussian Processes), um die Zielfunktion zu approximieren.
-- Nachteile: Die Skalierbarkeit von Bayesian Optimization ist begrenzt, da die Komplexität der Gaussian Processes mit der Anzahl der Dimensionen und Datenpunkten zunimmt.
+- Vorteile: nützlich für teure Zielfunktionen, da Anzahl der Funktionsauswertungen minimiert werden; verwendet probabilistische Modelle (hier: GP), um Zielfunktion zu approximieren.
+- Nachteile: Skalierbarkeit von Bayesian Optimization begrenzt, da Komplexität der GPs mit der Anzahl der Dimensionen und Datenpunkten zunimmt.
 
 Stochastic Gradient Descent (SGD)
 
-- Vorteile: SGD ist sehr effizient für hochdimensionale Probleme, insbesondere bei großen Datensätzen. Es verwendet stochastische Approximationen des Gradienten, was die Berechnungskosten pro Iteration reduziert.
-- Nachteile: SGD kann bei schlecht konditionierten Problemen langsam konvergieren und erfordert sorgfältige Wahl der Hyperparameter (z.B. Lernrate).
+- Vorteile: sehr effizient für hochdimensionale Probleme (große Datensätze); verwendet stochastische Approximationen des Gradienten (Reduzierung der Berechnungskosten pro Iteration)
+- Nachteile: kann bei schlecht konditionierten Problemen langsam konvergieren; erfordert sorgfältige Wahl der Hyperparameter 
 
 Sequential Quadratic Programming (SQP)
 
-- Vorteile: SQP ist ein leistungsfähiges Verfahren für nichtlineare Optimierungsprobleme mit Nebenbedingungen. Es löst eine Reihe von quadratischen Unterproblemen, die einfacher zu handhaben sind.
-- Nachteile: SQP kann bei sehr hohen Dimensionen speicherintensiv und rechenaufwendig sein.
-
-#### Weniger geeignete Optimierungsverfahren
+- Vorteile: löst Reihe von quadratischen Unterproblemen, die einfacher zu handhaben sind.
+- Nachteile: sehr hohen Dimensionen --> speicherintensiv und rechenaufwendig
 
 Downhill Simplex (Nelder-Mead)
 
-- Nachteile: Der Downhill Simplex Algorithmus skaliert schlecht mit der Dimension des Problems, da die Anzahl der Simplex-Ecken mit der Dimension zunimmt. Dies führt zu einer exponentiellen Zunahme der Berechnungskosten und kann die Konvergenz verlangsamen.
-
-Line Search
-
-- Nachteile: Line Search Verfahren sind in der Regel für unidimensionale Optimierungsprobleme konzipiert und erfordern eine geeignete Suchrichtung. In hochdimensionalen Räumen kann die Wahl der Suchrichtung und die Durchführung der Line Search ineffizient sein.
-
-#### Empfehlungen
-Für hochdimensionale zulässige Mengen empfehlen sich insbesondere Verfahren wie BFGS, Bayesian Optimization und Stochastic Gradient Descent. Diese Verfahren sind effizienter und skalierbarer als andere Methoden. Es ist jedoch wichtig, die spezifischen Anforderungen und Eigenschaften des Optimierungsproblems zu berücksichtigen, um das am besten geeignete Verfahren auszuwählen.
+- Nachteile: skaliert schlecht mit der Dimension des Problems, da die Anzahl der Simplex-Ecken mit der Dimension zunimmt --> exponentielle Zunahme der Berechnungskosten
 
 #### Mögliche Anpassungen
-????
 
-BoundedSets in BO? Skalierte Funktionen in BO? Sampling?
+- **BoundedSets (in BO)**: kann Suchraum beschränken; kann Effizienz erhöhen, indem unnötige Bereiche ausgeschlossen werden
+- **Sampling**: repräsentative Stichprobe des Suchraums --> kann die Effizienz erhöhen durch Reduzierng der Berechnungskosten, indem nur Teilmenge der möglichen Punkte untersucht wird
+- **Principal Component Analysis**: Reduzierung der Dimension des Suchraums, indem wichtigste Komponenten extrahiert werden
 
 ## Aufgabe 8: Cholesky in GP
 
