@@ -30,14 +30,6 @@ class GP(object):
             self.L = np.linalg.cholesky(self.__K())
         return self.L
 
-    @lru_cache(maxsize=None)
-    def _cached_kernel_impl(self, x1_tuple, x2_tuple):
-        """Diese Funktion arbeitet NUR mit Tupeln. Dadurch ist sie lru_cache-kompatibel."""
-        # Aus den Tupeln wieder ein numpy-Array bauen
-        x1 = np.array(x1_tuple)
-        x2 = np.array(x2_tuple)
-        return self.kernel(x1, x2)
-
     def __alpha(self, use_cho=True) -> np.array:
         """The vector alpha (notation as in Rasmussen&Williams) of this GP"""
         if not hasattr(self, 'alpha'):
