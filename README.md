@@ -2,6 +2,8 @@
 
 Dieses Repository enthält Implementierungen verschiedener mathematischer Optimierungsalgorithmen und -strukturen. Im Folgenden finden Sie eine Übersicht der Hauptklassen mit kurzen Beschreibungen und Beispielaufrufen.
 
+Relevante Python-Packages-Versionen sind in der `requirements.txt` festgehalten. Es wurde mit Python 3.12.0 gearbeitet.
+
 ## Klassenübersicht
 
 ### Allgemein
@@ -119,7 +121,7 @@ from Set import AffineSpace
 from DifferentiableFunction import DifferentiableFunction
 from ScaledDifferentiableFunction import ScaledDifferentiableFunction
 
-def test_scaling(self):
+def test_scaling():
     R2 = AffineSpace(2)
     f = DifferentiableFunction(
         name="f",
@@ -139,6 +141,11 @@ def test_scaling(self):
         
     # Funktion erstellen, die sowohl den Input als auch den Output skaliert und verschiebt
     scaled_offset_f = sdf.getScaledFunction(f, input_scalar=input_scalar, input_offset=input_offset, output_scalar=output_scalar, output_offset=output_offset)
+
+def test_auto_scaling():
+    f = DifferentiableFunction(...)
+    sdf = ScaledDifferentiableFunction()
+    autoScaled_f = sdf.getAutoScaledFunction(f, BO_option=True)
 ```
 
 
