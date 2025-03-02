@@ -55,6 +55,7 @@ class ReLUFeedForwardNN(object):
         # Obviously, this is not made for batch training or many other interesting NN techniques
         # Obviously, there are manny additional problems like using a loop over the data
         # Obviously, taking the Kronecker product is highly problematic in terms of space complex (and indirectly time) complexity
+        # Complexity: O(n * d * h^2), where n is the number of data points, d is the dimension of the data points, h is the hidden dimension
         assert data_x.shape[0] == data_y.shape[0], "need as many labels as data points"
 
         compose = DifferentiableFunction.FromComposition
@@ -62,12 +63,17 @@ class ReLUFeedForwardNN(object):
         # This is the zero function
         loss = 0
 
+        # Loopover the data points O(n)
         for i in range(data_x.shape[0]):
             datum = data_x[i, :]
 
             # A*x = (I\otimes x)*vec(A), correct, but slow
+            # Complexity Kronecker: O(d*h^2), where d is the dimension of the data points, h is the hidden dimension
+            # Identitymatrix of size h * Vector of size d
             mat = np.kron(np.eye(self.hidden_dim),
                           datum.reshape((1, -1)))
+            
+            # Complexity other operations: vernachlässigbar im Vergleich zu Kronecker
             lin1 = DifferentiableFunction.LinearMapFromMatrix(
                 mat)
             id1 = DifferentiableFunction.Identity(

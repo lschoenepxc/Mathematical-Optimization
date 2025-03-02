@@ -54,19 +54,12 @@ class GP(object):
     def __alpha(self, use_cho=True) -> np.array:
         """The vector alpha (notation as in Rasmussen&Williams) of this GP"""
         if not hasattr(self, 'alpha'):
-            # this is numerically less stable than using the cholesky decomposition
-            # self.alpha = np.linalg.solve(self.__K(), self.data_y)
-            # self.alpha = np.linalg.solve(self.__L().T, np.linalg.solve(self.__L(), self.data_y))
-            ### Comments todo:
-            # Effizienz: Laufzeit, Speicher, O-Notation
-            # wartbarkeit: Lesbarkeit, Verständlichkeit, Kommentare, Tests!!! --> tatsächlich numerisch stabiler?
-            # Lesbarkeit: Variablen, Funktionen, Kommentare
-            # scipy cho_solve --> viiiel zu langsam!! sollte aber nicht so sein: 
-            # https://stackoverflow.com/questions/66382370/performance-gap-between-np-linalg-solve-and-scipy-linalg-cho-solve
             if use_cho:
+                # with cholesky solve
+                # numerically more stable than np.linalg.solve
                 self.alpha = sp.linalg.cho_solve((self.__L(), True), self.data_y, check_finite=False)
             else:
-            # without cholesky solve
+                # without cholesky solve
                 z = np.linalg.solve(self.__L(), self.data_y)
                 self.alpha = np.linalg.solve(self.L.T, z)
         return self.alpha

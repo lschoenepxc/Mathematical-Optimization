@@ -23,10 +23,12 @@ class IField(ABC):
     def div(self, a, b):
         pass
 
+    # additive Inverse
     @abstractmethod
     def neg(self, a):
         pass
-
+    
+    # multiplikatives Inverse
     @abstractmethod
     def inv(self, a):
         pass
@@ -145,6 +147,11 @@ class LinearMap(ILinearMap):
         self._matrix = matrix
     
     def apply(self, v: Union[List[Union[float, int]], List[List[Union[float, int]]]]) -> Union[List[float], List[List[float]]]:
+        """
+        Wendet die lineare Abbildung auf einen Vektor oder eine Matrix an.
+        :param v: Vektor oder Matrix
+        :return: Vektor oder Matrix
+        """
         if isinstance(v, list) and isinstance(v[0], (float, int)):  # Vektor
             if len(v) != len(self._matrix[0]):
                 raise ValueError("Vektor-Dimension muss mit Spaltenanzahl der Matrix übereinstimmen.")

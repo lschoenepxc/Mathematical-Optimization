@@ -56,6 +56,7 @@ class DPLL(object):
         :param cnf: CNF formula
         :param assignment: Dictionary of variable assignments
         :return: Boolean indicating if the formula is satisfiable, and the assignment
+        Complexity: O(2^n), where n is the number of variables, but better with unit propagation and pure literal elimination (implemented)
         """
         # Unit propagation
         cnf = self.unit_propagate(cnf, assignment)

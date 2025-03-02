@@ -16,6 +16,19 @@ class GradientDescent(object):
         return x
 
     def StochasticMinimize(self, toLoss: Callable, data_x: np.array, data_y: np.array, startingpoint: np.array, iterations: int = 100, learningrate: float = 0.1, batch_size: int = 1) -> np.array:
+        """
+        Stochastic gradient descent
+        :param toLoss: A function that takes x and y as input and returns a loss function
+        :param data_x: The input data
+        :param data_y: The output data
+        :param startingpoint: The starting point
+        :param iterations: The number of iterations
+        :param learningrate: The learning rate
+        :param batch_size: The batch size
+        :return: The optimized parameters
+        Complexity: O(iterations*n/batch_size * d * h^2), 
+        where n is the number of data points, d is the dimension of the data points, h is the hidden dimension
+        """
         x = startingpoint
         n = data_x.shape[0]
         
@@ -32,6 +45,8 @@ class GradientDescent(object):
                 batch_y = data_y[batch_indices]
                 
                 # Compute the gradient for the mini-batch
+                # Complexity of toLoss: # Complexity: O(n * d * h^2), 
+                # where n is the number of data points, d is the dimension of the data points, h is the hidden dimension
                 loss = toLoss(batch_x, batch_y)
                 gradient = loss.jacobian(x).reshape([-1])
                 x = x - learningrate * gradient

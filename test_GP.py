@@ -182,7 +182,77 @@ class tests_GP(unittest.TestCase):
         self.assertAlmostEqual(sigma.evaluate(np.array([])).item(), 0)
 
         
+    def test_GP_kernel_comparison_linear_data(self):
+        # Lineare Daten
+        data_x = np.array([[1, 2], [3, 4], [5, 6]])
+        data_y = np.array([5, 11, 17])  # y = 2*x1 + x2 + 1
 
+        # Verschiedene Kerne
+        kernels = {
+            "RBF": GP.RBF(),
+            "Matern": GP.MaternCovariance(),
+            "Linear": GP.Linear()
+        }
+
+        results = {}
+
+        for name, kernel in kernels.items():
+            gp = GP(data_x=data_x, data_y=data_y, kernel=kernel)
+            mu = gp.PosteriorMean()
+            sigma2 = gp.PosteriorVariance()
+            sigma = gp.PosteriorStandardDeviation()
+
+            # Speichern der Ergebnisse
+            results[name] = {
+                "mu": mu.evaluate(np.array([1, 2])).item(),
+                "sigma2": sigma2.evaluate(np.array([1, 2])).item(),
+                "sigma": sigma.evaluate(np.array([1, 2])).item()
+            }
+        # print("Linear Data")
+        # # Vergleiche der Ergebnisse
+        # for name, result in results.items():
+        #     print(f"Kernel: {name}")
+        #     print(f"Posterior Mean: {result['mu']}")
+        #     print(f"Posterior Variance: {result['sigma2']}")
+        #     print(f"Posterior Standard Deviation: {result['sigma']}")
+        #     print()
+        
+    def test_GP_kernel_comparison_noisy_exponential_data(self):
+        # Verrauschte exponentielle Daten
+        np.random.seed(0)
+        data_x = np.array([[1, 2], [3, 4], [5, 6]])
+        data_y = np.exp(data_x[:, 0]) + np.exp(data_x[:, 1]) + np.random.normal(0, 0.1, data_x.shape[0])
+
+        # Verschiedene Kerne
+        kernels = {
+            "RBF": GP.RBF(),
+            "Matern": GP.MaternCovariance(),
+            "Linear": GP.Linear()
+        }
+
+        results = {}
+
+        for name, kernel in kernels.items():
+            gp = GP(data_x=data_x, data_y=data_y, kernel=kernel)
+            mu = gp.PosteriorMean()
+            sigma2 = gp.PosteriorVariance()
+            sigma = gp.PosteriorStandardDeviation()
+
+            # Speichern der Ergebnisse
+            results[name] = {
+                "mu": mu.evaluate(np.array([1, 2])).item(),
+                "sigma2": sigma2.evaluate(np.array([1, 2])).item(),
+                "sigma": sigma.evaluate(np.array([1, 2])).item()
+            }
+
+        # print("Noisy Exponential Data")
+        # # Vergleiche der Ergebnisse
+        # for name, result in results.items():
+        #     print(f"Kernel: {name}")
+        #     print(f"Posterior Mean: {result['mu']}")
+        #     print(f"Posterior Variance: {result['sigma2']}")
+        #     print(f"Posterior Standard Deviation: {result['sigma']}")
+        #     print()
 
 if __name__ == '__main__':
     unittest.main()

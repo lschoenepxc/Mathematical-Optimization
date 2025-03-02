@@ -12,7 +12,14 @@ class BO(object):
         super().__init__()
 
     def Minimize(self, function: IDifferentiableFunction, iterations: int = 50, x: Optional[np.array] = None, y: Optional[np.array] = None) -> np.array:
-
+        """
+        Minimize the given function using Bayesian Optimization.
+        :param function: The function to minimize.
+        :param iterations: The number of iterations to run the optimization.
+        :param x: The data_x to start the optimization with.
+        :param y: The data_y to start the optimization with.
+        :return: The point with the lowest function value found during the optimization.
+        """
         domain = function.domain
         d = domain._ambient_dimension
 
@@ -32,8 +39,10 @@ class BO(object):
             data_x = np.empty((0, d))
             data_y = np.empty((0,))
         
-        gp = GP(data_x=data_x, data_y=data_y)
-        # gp = GP(data_x=data_x, data_y=data_y, kernel=GP.MaternCovariance(nu=1.5, length_scale=1))
+        # Mögliche Kernels: GP.Linear(), GP.MaternCovariance(), GP.RBF()
+        # gp = GP(data_x=data_x, data_y=data_y)
+        # gp = GP(data_x=data_x, data_y=data_y, kernel=GP.Linear())
+        gp = GP(data_x=data_x, data_y=data_y, kernel=GP.MaternCovariance())
         sqp = SQP()
 
         for step in range(iterations):

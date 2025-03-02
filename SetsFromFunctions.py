@@ -35,7 +35,11 @@ class BoundedSet(MultidimensionalInterval):
             return None
     
     def project(self, point: np.array) -> np.array:
-        # Project the point onto the bounds
+        """
+        Projects a point onto the bounded set
+        :param point: Point to project
+        :return: Projected point
+        """
         projected_point = np.minimum(np.maximum(point, self.lower_bounds), self.upper_bounds)
         
         # If there are inequality constraints, project onto them as well

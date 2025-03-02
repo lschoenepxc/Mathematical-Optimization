@@ -18,7 +18,7 @@ class tests_DHSimplex(unittest.TestCase):
         bounded_set = None
         result = simplex.minimize(function=function, startingpoints=startingpoints, params=params, iterations=100, tol_x=1e-5, tol_y=1e-5, bounded_set=bounded_set)
         
-        # Überprüfen, ob das Ergebnis nahe dem globalen Minimum [0, 0] liegt
+        # Überprüfen, ob das Ergebnis nahe dem globalen Minimum 0 liegt
         expected_result = np.array(0.0)
         np.testing.assert_array_almost_equal(result[0], expected_result, decimal=5)
         
@@ -32,7 +32,7 @@ class tests_DHSimplex(unittest.TestCase):
         bounded_set = None
         result = simplex.minimize(function=function, startingpoints=startingpoints, params=params, iterations=100, tol_x=1e-5, tol_y=1e-5, bounded_set=bounded_set)
         
-        # Überprüfen, ob das Ergebnis nahe dem globalen Minimum [0, 0] liegt
+        # Überprüfen, ob das Ergebnis nahe dem globalen Minimum 0 liegt
         expected_result = np.array(0.0)
         np.testing.assert_array_almost_equal(result[0], expected_result, decimal=2)
         
@@ -46,7 +46,7 @@ class tests_DHSimplex(unittest.TestCase):
         bounded_set = BoundedSet(lower_bounds=np.array([1, 1]), upper_bounds=np.array([10, 10]), InequalityConstraints=inequality_constraints)
         result = simplex.minimize(function=function, startingpoints=startingpoints, params=params, iterations=100, tol_x=1e-5, tol_y=1e-5, bounded_set=bounded_set)
         
-        # Überprüfen, ob das Ergebnis nahe dem globalen Minimum [0, 0] liegt
+        # Überprüfen, ob das Ergebnis nahe dem globalen Minimum 1 liegt
         expected_result = np.array(1.0)
         np.testing.assert_array_almost_equal(result[0], expected_result, decimal=2)
         
