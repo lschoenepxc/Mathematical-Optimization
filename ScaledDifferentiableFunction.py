@@ -47,7 +47,7 @@ class ScaledDifferentiableFunction(object):
         return input_scalar_matrix, output_scalar_matrix, input_offset, output_offset, input_scalar, output_scalar
     
     @classmethod
-    def getScaledFunction(cls, f: DifferentiableFunction, input_scalar: Optional[Union[int, float, np.array]] = None, output_scalar: Optional[Union[int, float, np.array]] = None, input_offset: Optional[Union[int, float, np.array]] = None, output_offset: Optional[Union[int, float, np.array]] = None) -> DifferentiableFunction:
+    def getScaledFunction(cls, f: DifferentiableFunction, input_scalar: Optional[Union[int, float, np.array]] = None, output_scalar: Optional[Union[int, float, np.array]] = None, input_offset: Optional[Union[int, float, np.array]] = None, output_offset: Optional[Union[int, float, np.array]] = None, auto_scale: Optional[bool] = False) -> DifferentiableFunction:
         """
         Returns a function that scales both input and output and can add offsets to input and output:
         x -> output_scalar * f(input_scalar * x + input_offset) + output_offset
@@ -66,9 +66,15 @@ class ScaledDifferentiableFunction(object):
         
         input_scalar_matrix, output_scalar_matrix, input_offset, output_offset, input_scalar, output_scalar = cls.getScalingParamsDim(input_scalar, output_scalar, input_offset, output_offset, input_dim, output_dim)
         
+        if auto_scale:
+            # MulidimensionalInterval [-1,1] as domain
+            domain = MultidimensionalInterval(np.array([-1]*input_dim), np.array([1]*input_dim))
+        else:
+            domain = f.domain
+        
         return DifferentiableFunction(
             name=f"{output_scalar} * {f.name}({input_scalar} * x + {input_offset}) + {output_offset}",
-            domain=f.domain,
+            domain=domain,
             evaluate=lambda x: np.matmul(output_scalar_matrix, f.evaluate(np.matmul(input_scalar_matrix, x) + input_offset)) + output_offset if isinstance(x, np.ndarray) else output_scalar * f.evaluate(input_scalar * x + input_offset) + output_offset,
             jacobian=lambda x: np.matmul(output_scalar_matrix, np.matmul(f.jacobian(np.matmul(input_scalar_matrix, x) + input_offset), input_scalar_matrix)) if isinstance(x, np.ndarray) else output_scalar * f.jacobian(input_scalar * x + input_offset) * input_scalar
         )
@@ -76,8 +82,12 @@ class ScaledDifferentiableFunction(object):
     @classmethod
     def getAutoScaledFunction(cls, f: DifferentiableFunction, samples: Optional[int] = 1000, BO_option: Optional[bool] = False):
         """
-        Returns the autoscaled function of the given function f, so that the output values are in [0, 1].
+        Returns the autoscaled function of the given function f, so that the output values are in [-1, 1] and fixed for inputs in [-1,1].
         Only implemented for MultidimensionalInterval domains.
+        :param f: The function to be scaled.
+        :param samples: The number of samples to be used for min max calculation if BO_option is False.
+        :param BO_option: If True, the min max values are calculated via Bayesian Optimization, otherwise via sampling.
+        :return: The autoscaled function.
         """
         # assert domain is MultiDimensionalInterval
         domain = f.domain
@@ -103,10 +113,14 @@ class ScaledDifferentiableFunction(object):
             
         # print("Min: ", min_point, "Max: ", max_point)
         
-        # calculate the output scalar and offset so that the output is scaled to [0, 1]
-        output_scalar = 1 / (max_point - min_point)
-        output_offset = -min_point / (max_point - min_point)
+        # calculate the output scalar and offset so that the output is scaled to [-1, 1]
+        output_scalar = 2 / (max_point - min_point)
+        output_offset = -1 - (2 * min_point / (max_point - min_point))
         
-        # print("Params: ", output_scalar, output_offset)
+        # calculate the input scalar and offset so that the input is scaled to [-1, 1]
+        input_scalar = 1/(2 / (domain._upper_bounds - domain._lower_bounds))
+        input_offset = 1 * (domain._upper_bounds + domain._lower_bounds) / (domain._upper_bounds - domain._lower_bounds)
         
-        return cls.getScaledFunction(f, output_scalar=output_scalar, output_offset=output_offset)
+        # print("Params: ", output_scalar, output_offset, input_scalar, input_offset)
+        
+        return cls.getScaledFunction(f, input_scalar=input_scalar, input_offset=input_offset, output_scalar=output_scalar, output_offset=output_offset, auto_scale=True)

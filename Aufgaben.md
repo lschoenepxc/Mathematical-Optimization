@@ -12,36 +12,18 @@ Downhill Simplex siehe:
 
 ## Aufgabe 2.2: Skalierungen von Funktionen
 
-Skalierung
--  Fließkommazahlen arbeiten am besten im Bereich −1,1
--  Man sollte durch Skalierung sicherstellen, dass sich alle Zahlen grob in
-dem Bereich aufhalten
-- Größere Zahlen können zu float.infführen
-- Kleine Zahlen haben weniger Genauigkeit durch wenige Nachkommastellen
-- Im maschinellen Lernen
-- skaliert man X-Daten auf [−1,1] oder 𝑁(0,1) (ggf. auch transformieren),
-- skaliert man Y-Daten auf [−1,1] oder 𝑁(0,1) (ggf. auch transformieren) und
-- initialisiert man die Modelle, so dass 𝑁(0,1) (grob) auf 𝑁(0,1) abbildet
+Skalierung:
+-  weil: Fließkommazahlen arbeiten am besten im Bereich [−1,1]
+- mögliche Probleme bei: 
+    - BFGS (approximierte Hesse-Matrix), 
+    - Gauß-Prozesse und BO (Kernel-Funktionen),
+    - NN (langsamere Konvergenz, schlechtere Modellanpassungen)
+    - (S)GD (numerische Instabilitäten bei Gradienteninformationen)
+- hier: Funktion wird so sklaiert, dass die Ausgabewerte in [-1,1] liegen und so verschoben, dass sie Eingaben aus [-1,1] erhält
+- Einschränkung für Auto-Scaling: Funktion sollte auf einem MultidimensionlInterval definiert sein
+- Max und Min Werte der Funktion für die Output-Skalierung entweder durch Sampling oder BO
 
-Skalierung in der Optimierung
-- Die zulässige Menge 𝑋 kann man meistens auch weitläufig in [−1,1] 𝑑
-reinskalieren
-- Die Ausgabewerte der Zielfunktion sind oft vorher nicht bekannt.
-- Dann raten
-- Oder nach ein paar a-prior Auswertungen skalieren
-- Oder nach ein paar Schritten neu skalieren
-
-Skalierung in der Praxis
-- 𝑓 𝑠𝑐𝑎𝑙𝑒 = 𝑡𝑜 ∘ 𝑓 ∘ 𝑡𝑖
-- Mit 𝑡0: ℝ → ℝ: 𝑥 ↦ 𝑎𝑥 + 𝑏 und 𝑡𝑖: ℝ𝑑 → ℝ𝑑: 𝑥 ↦ 𝐷𝑥 + 𝑐
-für 𝑎, 𝑏 ∈ ℝ, 𝐷 eine reelle Diagonalmatrix und 𝑐 ∈ ℝ𝑑
-- Das ist eine Komposition und die kann man auch so handhaben.
-- Wenn die Probleme im Optimierungsalgorithmus liegen, wird man sie oft los
-- Wenn die Probleme in der Auswertung von 𝑓 liegen, dann leider nicht
-- Wenn hochqualitative Optimierungsalgorithmen Probleme machen,
-dann ist das eine sehr wahrscheinliche Fehlerquelle
-
---> Still to do????
+Siehe: `ScaledDifferentiableFunctions.py`, Tests in `test_Functions.py`
 
 ## Aufgabe 3: SGD mit NNS
 
